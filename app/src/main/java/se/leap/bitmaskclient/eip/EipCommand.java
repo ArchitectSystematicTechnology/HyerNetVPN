@@ -4,21 +4,19 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.ResultReceiver;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import androidx.core.content.ContextCompat;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import static se.leap.bitmaskclient.Constants.EIP_ACTION_CHECK_CERT_VALIDITY;
-import static se.leap.bitmaskclient.Constants.EIP_ACTION_CONFIGURE_TETHERING;
-import static se.leap.bitmaskclient.Constants.EIP_ACTION_START;
-import static se.leap.bitmaskclient.Constants.EIP_ACTION_START_BLOCKING_VPN;
-import static se.leap.bitmaskclient.Constants.EIP_ACTION_STOP;
-import static se.leap.bitmaskclient.Constants.EIP_EARLY_ROUTES;
-import static se.leap.bitmaskclient.Constants.EIP_N_CLOSEST_GATEWAY;
-import static se.leap.bitmaskclient.Constants.EIP_RECEIVER;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_CHECK_CERT_VALIDITY;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_CONFIGURE_TETHERING;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_START;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_START_BLOCKING_VPN;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_STOP;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_EARLY_ROUTES;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_N_CLOSEST_GATEWAY;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_RECEIVER;
 
 /**
  * Use this class to send commands to EIP
@@ -26,7 +24,7 @@ import static se.leap.bitmaskclient.Constants.EIP_RECEIVER;
 
 public class EipCommand {
 
-    private static void execute(@NotNull Context context, @NotNull String action) {
+    private static void execute(@NonNull Context context, @NonNull String action) {
         execute(context.getApplicationContext(), action, null, null);
     }
 
@@ -37,8 +35,7 @@ public class EipCommand {
      *               filter for the EIP class
      * @param resultReceiver The resultreceiver to reply to
      */
-    private static void execute(@NotNull Context context, @NotNull String action, @Nullable ResultReceiver resultReceiver, @Nullable Intent vpnIntent) {
-        // TODO validate "action"...how do we get the list of intent-filters for a class via Android API?
+    private static void execute(@NonNull Context context, @NonNull String action, @Nullable ResultReceiver resultReceiver, @Nullable Intent vpnIntent) {
         if (vpnIntent == null) {
             vpnIntent = new Intent();
         }

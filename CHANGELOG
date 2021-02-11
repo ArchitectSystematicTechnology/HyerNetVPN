@@ -1,3 +1,25 @@
+1.0.7
+features:
+- new translations
+
+bugfixes:
+- fixed relaunch VPN on reboot:
+> in case always-on system setting is enabled on Android O+
+> in case VPN was connected before turning off the smartphone on pre Android O
+> better support for "Block connections without VPN" system setting while rebooting
+
+
+1.0.6 - New Year release
+features:
+- auto-update for apks downloaded from bitmask.net and from brand websites like riseup.net
+- pgp verification to secure auto-update mechanism
+- support for Android 10 and Android 11
+- new translations (<3 to all translators)
+- update openvpn, openssl and other dependencies
+
+bugfixes:
+- fix "exclude apps from VPN" feature
+
 1.0.5 - Menshen release
 features:
 - geoip service: improved automatic gateway selection, taking hemisphere into account

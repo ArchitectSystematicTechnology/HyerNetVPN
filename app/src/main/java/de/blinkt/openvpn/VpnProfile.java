@@ -15,12 +15,14 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.security.KeyChain;
 import android.security.KeyChainException;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Base64;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.spongycastle.util.io.pem.PemObject;
 import org.spongycastle.util.io.pem.PemWriter;
@@ -63,14 +65,13 @@ import de.blinkt.openvpn.core.VPNLaunchHelper;
 import de.blinkt.openvpn.core.VpnStatus;
 import de.blinkt.openvpn.core.X509Utils;
 import de.blinkt.openvpn.core.connection.Connection;
-import de.blinkt.openvpn.core.connection.Obfs4Connection;
-import de.blinkt.openvpn.core.connection.OpenvpnConnection;
+import de.blinkt.openvpn.core.connection.ConnectionAdapter;
 import se.leap.bitmaskclient.BuildConfig;
 import se.leap.bitmaskclient.R;
 
 import static de.blinkt.openvpn.core.connection.Connection.TransportType.OBFS4;
-import static se.leap.bitmaskclient.Constants.PROVIDER_PROFILE;
-import static se.leap.bitmaskclient.utils.ConfigHelper.stringEqual;
+import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PROFILE;
+import static se.leap.bitmaskclient.base.utils.ConfigHelper.stringEqual;
 
 public class VpnProfile implements Serializable, Cloneable {
     // Note that this class cannot be moved to core where it belongs since
@@ -145,6 +146,7 @@ public class VpnProfile implements Serializable, Cloneable {
     public String mCustomConfigOptions = "";
     public String mVerb = "1";  //ignored
     public String mCipher = "";
+    public String mDataCiphers = "";
     public boolean mNobind = true;
     public boolean mUseDefaultRoutev6 = true;
     public String mCustomRoutesv6 = "";
@@ -165,6 +167,7 @@ public class VpnProfile implements Serializable, Cloneable {
     public boolean mRemoteRandom = false;
     public HashSet<String> mAllowedAppsVpn = new HashSet<>();
     public boolean mAllowedAppsVpnAreDisallowed = true;
+    public boolean mAllowAppVpnBypass = false;
     public String mCrlFilename;
     public String mProfileCreator;
     public String mExternalAuthenticator;
@@ -186,6 +189,7 @@ public class VpnProfile implements Serializable, Cloneable {
     // set members to default values
     private UUID mUuid;
     private int mProfileVersion;
+    public boolean mBlockUnusedAddressFamilies = true;
     public String mGatewayIp;
     public boolean mUsePluggableTransports;
 
@@ -300,21 +304,6 @@ public class VpnProfile implements Serializable, Cloneable {
 
     @Deprecated
     public void upgradeProfile() {
-        if (mProfileVersion < 2) {
-            /* default to the behaviour the OS used */
-            mAllowLocalLAN = Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT;
-        }
-
-        if (mProfileVersion < 4) {
-            moveOptionsToConnection();
-            mAllowedAppsVpnAreDisallowed = true;
-        }
-        if (mAllowedAppsVpn == null)
-            mAllowedAppsVpn = new HashSet<>();
-
-        if (mConnections == null)
-            mConnections = new Connection[0];
-
         if (mProfileVersion < 6) {
             if (TextUtils.isEmpty(mProfileCreator))
                 mUserEditable = true;
@@ -326,20 +315,6 @@ public class VpnProfile implements Serializable, Cloneable {
         }
 
         mProfileVersion = CURRENT_PROFILE_VERSION;
-
-    }
-
-    @Deprecated
-    private void moveOptionsToConnection() {
-        mConnections = new Connection[1];
-        Connection conn = mUsePluggableTransports ? new Obfs4Connection() : new OpenvpnConnection();
-
-        conn.setServerName(mServerName);
-        conn.setServerPort(mServerPort);
-        conn.setUseUdp(mUseUdp);
-        conn.setCustomConfiguration("");
-
-        mConnections[0] = conn;
 
     }
 
@@ -509,15 +484,18 @@ public class VpnProfile implements Serializable, Cloneable {
 
         if (mUseTLSAuth) {
             boolean useTlsCrypt = mTLSAuthDirection.equals("tls-crypt");
+            boolean useTlsCrypt2 = mTLSAuthDirection.equals("tls-crypt-v2");
 
             if (mAuthenticationType == TYPE_STATICKEYS)
                 cfg.append(insertFileData("secret", mTLSAuthFilename));
             else if (useTlsCrypt)
                 cfg.append(insertFileData("tls-crypt", mTLSAuthFilename));
+            else if (useTlsCrypt2)
+                cfg.append(insertFileData("tls-crypt-v2", mTLSAuthFilename));
             else
                 cfg.append(insertFileData("tls-auth", mTLSAuthFilename));
 
-            if (!TextUtils.isEmpty(mTLSAuthDirection) && !useTlsCrypt) {
+            if (!TextUtils.isEmpty(mTLSAuthDirection) && !useTlsCrypt && !useTlsCrypt2) {
                 cfg.append("key-direction ");
                 cfg.append(mTLSAuthDirection);
                 cfg.append("\n");
@@ -623,6 +601,12 @@ public class VpnProfile implements Serializable, Cloneable {
             }
             if (mExpectTLSCert)
                 cfg.append("remote-cert-tls server\n");
+        }
+
+
+        if (!TextUtils.isEmpty(mDataCiphers))
+        {
+            cfg.append("data-ciphers ").append(mDataCiphers).append("\n");
         }
 
         if (!TextUtils.isEmpty(mCipher)) {
@@ -1147,8 +1131,9 @@ public class VpnProfile implements Serializable, Cloneable {
 
     public static VpnProfile fromJson(String json) {
         try {
-            Gson gson = new Gson();
-            return gson.fromJson(json, VpnProfile.class);
+            GsonBuilder builder = new GsonBuilder();
+            builder.registerTypeAdapter(Connection.class, new ConnectionAdapter());
+            return builder.create().fromJson(json, VpnProfile.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
