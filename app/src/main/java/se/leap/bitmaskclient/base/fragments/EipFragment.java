@@ -52,10 +52,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import de.blinkt.openvpn.core.ConnectionStatus;
 import de.blinkt.openvpn.core.IOpenVPNServiceInternal;
 import de.blinkt.openvpn.core.OpenVPNService;
 import de.blinkt.openvpn.core.VpnStatus;
-import se.leap.bitmaskclient.providersetup.ProviderListActivity;
 import se.leap.bitmaskclient.R;
 import se.leap.bitmaskclient.base.FragmentManagerEnhanced;
 import se.leap.bitmaskclient.base.models.Provider;
@@ -64,6 +64,7 @@ import se.leap.bitmaskclient.base.views.VpnStateImage;
 import se.leap.bitmaskclient.eip.EipCommand;
 import se.leap.bitmaskclient.eip.EipStatus;
 import se.leap.bitmaskclient.providersetup.ProviderAPICommand;
+import se.leap.bitmaskclient.providersetup.ProviderListActivity;
 import se.leap.bitmaskclient.providersetup.activities.CustomProviderSetupActivity;
 import se.leap.bitmaskclient.providersetup.activities.LoginActivity;
 import se.leap.bitmaskclient.providersetup.models.LeapSRPSession;
@@ -83,7 +84,6 @@ import static se.leap.bitmaskclient.base.models.Constants.REQUEST_CODE_SWITCH_PR
 import static se.leap.bitmaskclient.base.models.Constants.SHARED_PREFERENCES;
 import static se.leap.bitmaskclient.base.utils.ConfigHelper.isDefaultBitmask;
 import static se.leap.bitmaskclient.base.utils.ViewHelper.convertDimensionToPx;
-import static se.leap.bitmaskclient.eip.EipSetupObserver.connectionRetry;
 import static se.leap.bitmaskclient.eip.EipSetupObserver.gatewayOrder;
 import static se.leap.bitmaskclient.eip.EipSetupObserver.reconnectingWithDifferentGateway;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.DOWNLOAD_GEOIP_JSON;
@@ -176,12 +176,18 @@ public class EipFragment extends Fragment implements Observer {
         View view = inflater.inflate(R.layout.f_eip, container, false);
         unbinder = ButterKnife.bind(this, view);
 
-        Bundle arguments = getArguments();
-        if (arguments != null && arguments.containsKey(ASK_TO_CANCEL_VPN) && arguments.getBoolean(ASK_TO_CANCEL_VPN)) {
-            arguments.remove(ASK_TO_CANCEL_VPN);
-            setArguments(arguments);
-            askToStopEIP();
+        try {
+            Bundle arguments = getArguments();
+            if (arguments != null && arguments.containsKey(ASK_TO_CANCEL_VPN) && arguments.getBoolean(ASK_TO_CANCEL_VPN)) {
+                arguments.remove(ASK_TO_CANCEL_VPN);
+                setArguments(arguments);
+                askToStopEIP();
+            }
+        } catch (IllegalStateException e) {
+            // probably setArguments failed because the fragments state is already saved
+            e.printStackTrace();
         }
+
         restoreFromSavedInstance(savedInstanceState);
         return view;
     }
@@ -320,10 +326,7 @@ public class EipFragment extends Fragment implements Observer {
         } else {
             EipCommand.startVPN(context.getApplicationContext(), false);
         }
-        vpnStateImage.showProgress();
-        routedText.setVisibility(GONE);
-        vpnRoute.setVisibility(GONE);
-        colorBackgroundALittle();
+        EipStatus.getInstance().updateState("UI_CONNECTING", "", 0, ConnectionStatus.LEVEL_START);
     }
 
     protected void stopEipIfPossible() {
@@ -474,10 +477,6 @@ public class EipFragment extends Fragment implements Observer {
         toast.setDuration(Toast.LENGTH_LONG);
         toast.setView(layout);
         toast.show();
-    }
-    private void showReconnectToast(Activity activity) {
-        String message = (String.format("Retry %d of %d before the next closest gateway will be selected.", connectionRetry()+1, 5));
-        showToast(activity, message, false);
     }
 
     private void showRetryToast(Activity activity) {

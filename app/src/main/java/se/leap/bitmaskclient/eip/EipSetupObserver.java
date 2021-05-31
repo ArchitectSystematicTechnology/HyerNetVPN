@@ -54,10 +54,12 @@ import static se.leap.bitmaskclient.base.models.Constants.BROADCAST_GATEWAY_SETU
 import static se.leap.bitmaskclient.base.models.Constants.BROADCAST_PROVIDER_API_EVENT;
 import static se.leap.bitmaskclient.base.models.Constants.BROADCAST_RESULT_CODE;
 import static se.leap.bitmaskclient.base.models.Constants.BROADCAST_RESULT_KEY;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_LAUNCH_VPN;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_PREPARE_VPN;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_START;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_START_ALWAYS_ON_VPN;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_EARLY_ROUTES;
+import static se.leap.bitmaskclient.base.models.Constants.EIP_N_CLOSEST_GATEWAY;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_REQUEST;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_KEY;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PROFILE;
@@ -74,15 +76,12 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
 
     private static final String TAG = EipSetupObserver.class.getName();
 
-    //The real timout is 4*2s + 1*4s + 1*8s + 1*16s + 1*32s + 1*64s = 132 s;
-    private static final String TIMEOUT = "4";
     private static final int UPDATE_CHECK_TIMEOUT = 1000*60*60*24*7;
     private Context context;
     private VpnProfile setupVpnProfile;
     private String observedProfileFromVpnStatus;
     AtomicBoolean changingGateway = new AtomicBoolean(false);
     AtomicInteger setupNClosestGateway = new AtomicInteger();
-    AtomicInteger reconnectTry = new AtomicInteger();
     private Vector<EipSetupListener> listeners = new Vector<>();
     private SharedPreferences preferences;
     private static EipSetupObserver instance;
@@ -107,10 +106,6 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
 
     public static boolean reconnectingWithDifferentGateway() {
         return instance.setupNClosestGateway.get() > 0;
-    }
-
-    public static int connectionRetry() {
-        return instance.reconnectTry.get();
     }
 
     public static int gatewayOrder() {
@@ -165,14 +160,14 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
                 ProviderObservable.getInstance().updateProvider(provider);
                 PreferenceHelper.storeProviderInPreferences(preferences, provider);
                 if (EipStatus.getInstance().isDisconnected()) {
-                    EipCommand.startVPN(context.getApplicationContext(), true);
+                    EipCommand.startVPN(context.getApplicationContext(), false);
                 }
                 break;
             case CORRECTLY_UPDATED_INVALID_VPN_CERTIFICATE:
                 provider = resultData.getParcelable(PROVIDER_KEY);
                 ProviderObservable.getInstance().updateProvider(provider);
                 PreferenceHelper.storeProviderInPreferences(preferences, provider);
-                EipCommand.startVPN(context.getApplicationContext(), true);
+                EipCommand.startVPN(context.getApplicationContext(), false);
                 break;
             case CORRECTLY_DOWNLOADED_GEOIP_JSON:
                 provider = resultData.getParcelable(PROVIDER_KEY);
@@ -219,20 +214,31 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
             case EIP_ACTION_START_ALWAYS_ON_VPN:
                 if (resultCode == RESULT_CANCELED) {
                     //setup failed
-                    if (error == EIP.EIPErrors.NO_MORE_GATEWAYS) {
-                        finishGatewaySetup(false);
-                        EipCommand.startBlockingVPN(context.getApplicationContext());
-                    } else {
-                        //FIXME:
-                        finishGatewaySetup(false);
-                        EipCommand.stopVPN(context);
-                        EipStatus.refresh();
+                    switch (error) {
+                        case NO_MORE_GATEWAYS:
+                            finishGatewaySetup(false);
+                            EipCommand.startBlockingVPN(context.getApplicationContext());
+                            break;
+                        case ERROR_INVALID_PROFILE:
+                            selectNextGateway();
+                            break;
+                        default:
+                            finishGatewaySetup(false);
+                            EipCommand.stopVPN(context);
+                            EipStatus.refresh();
                     }
                 }
                 break;
             case EIP_ACTION_PREPARE_VPN:
                 if (resultCode == RESULT_CANCELED) {
                     VpnStatus.logError("Error preparing VpnService.");
+                    finishGatewaySetup(false);
+                    EipStatus.refresh();
+                }
+                break;
+            case EIP_ACTION_LAUNCH_VPN:
+                if (resultCode == RESULT_CANCELED) {
+                    VpnStatus.logError("Error starting VpnService.");
                     finishGatewaySetup(false);
                     EipStatus.refresh();
                 }
@@ -259,21 +265,9 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
             return;
         }
         setupVpnProfile = vpnProfile;
-        setupNClosestGateway.set(event.getIntExtra(Gateway.KEY_N_CLOSEST_GATEWAY, 0));
+        setupNClosestGateway.set(event.getIntExtra(EIP_N_CLOSEST_GATEWAY, 0));
         Log.d(TAG, "bitmaskapp add state listener");
         VpnStatus.addStateListener(this);
-
-        launchVPN(setupVpnProfile);
-    }
-
-    private void launchVPN(VpnProfile vpnProfile) {
-        Intent intent = new Intent(context.getApplicationContext(), LaunchVPN.class);
-        intent.setAction(Intent.ACTION_MAIN);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra(LaunchVPN.EXTRA_HIDELOG, true);
-        intent.putExtra(PROVIDER_PROFILE, vpnProfile);
-        intent.putExtra(Gateway.KEY_N_CLOSEST_GATEWAY, setupNClosestGateway.get());
-        context.startActivity(intent);
     }
 
     @Override
@@ -293,15 +287,9 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
         if (ConnectionStatus.LEVEL_STOPPING == level) {
             finishGatewaySetup(false);
         } else if ("CONNECTRETRY".equals(state) && LEVEL_CONNECTING_NO_SERVER_REPLY_YET.equals(level)) {
-            Log.d(TAG, "trying gateway: " + setupVpnProfile.getName());
-            if (TIMEOUT.equals(logmessage)) {
-                Log.e(TAG, "Timeout reached! Try next gateway!");
-                VpnStatus.logError("Timeout reached! Try next gateway!");
-                selectNextGateway();
-                return;
-            }
-            int current = reconnectTry.get();
-            reconnectTry.set(current + 1);
+            Log.e(TAG, "Timeout reached! Try next gateway!");
+            VpnStatus.logError("Timeout reached! Try next gateway!");
+            selectNextGateway();
         } else if ("NOPROCESS".equals(state) && LEVEL_NOTCONNECTED == level) {
             //??
         } else if ("CONNECTED".equals(state)) {
@@ -327,7 +315,6 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
 
     private void selectNextGateway() {
         changingGateway.set(true);
-        reconnectTry.set(0);
         EipCommand.startVPN(context.getApplicationContext(), false, setupNClosestGateway.get() + 1);
     }
 
@@ -337,7 +324,6 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
         setupNClosestGateway.set(0);
         observedProfileFromVpnStatus = null;
         this.changingGateway.set(changingGateway);
-        this.reconnectTry.set(0);
     }
 
     /**

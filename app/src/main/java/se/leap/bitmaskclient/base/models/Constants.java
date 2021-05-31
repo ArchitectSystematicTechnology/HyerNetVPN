@@ -40,6 +40,7 @@ public interface Constants {
     String USE_IPv6_FIREWALL = "use_ipv6_firewall";
     String RESTART_ON_UPDATE = "restart_on_update";
     String LAST_UPDATE_CHECK = "last_update_check";
+    String PREFERRED_CITY = "preferred_city";
 
 
      //////////////////////////////////////////////
@@ -80,7 +81,7 @@ public interface Constants {
     String EIP_ACTION_START_BLOCKING_VPN = "se.leap.bitmaskclient.EIP_ACTION_START_BLOCKING_VPN";
     String EIP_ACTION_STOP_BLOCKING_VPN = "se.leap.bitmaskclient.EIP_ACTION_STOP_BLOCKING_VPN";
     String EIP_ACTION_PREPARE_VPN = "se.leap.bitmaskclient.EIP_ACTION_PREPARE_VPN";
-    String EIP_ACTION_CONFIGURE_TETHERING = "se.leap.bitmaskclient.EIP_ACTION_CONFIGURE_TETHERING";
+    String EIP_ACTION_LAUNCH_VPN = "se.leap.bitmaskclient.EIP_ACTION_LAUNCH_VPN";
 
     String EIP_RECEIVER = "EIP.RECEIVER";
     String EIP_REQUEST = "EIP.REQUEST";
@@ -103,6 +104,13 @@ public interface Constants {
     String PROVIDER_EIP_DEFINITION = "Constants.EIP_DEFINITION";
     String PROVIDER_PROFILE_UUID = "Constants.PROVIDER_PROFILE_UUID";
     String PROVIDER_PROFILE = "Constants.PROVIDER_PROFILE";
+
+    ////////////////////////////////////////////////
+    // PRESHIPPED PROVIDER CONFIG
+    ////////////////////////////////////////////////
+    String URLS = "urls";
+    String EXT_JSON = ".json";
+    String EXT_PEM = ".pem";
 
     //////////////////////////////////////////////
     // CREDENTIAL CONSTANTS
@@ -150,6 +158,7 @@ public interface Constants {
     // JSON KEYS
     /////////////////////////////////////////////
     String IP_ADDRESS = "ip_address";
+    String IP_ADDRESS6 = "ip_address6";
     String REMOTE = "remote";
     String PORTS = "ports";
     String PROTOCOLS = "protocols";
@@ -165,4 +174,7 @@ public interface Constants {
     String OPENVPN_CONFIGURATION = "openvpn_configuration";
     String GATEWAYS = "gateways";
     String HOST = "host";
+    String SORTED_GATEWAYS = "sortedGateways";
+    String FULLNESS = "fullness";
+    String OVERLOAD = "overload";
 }

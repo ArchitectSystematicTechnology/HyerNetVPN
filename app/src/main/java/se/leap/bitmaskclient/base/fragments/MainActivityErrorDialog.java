@@ -18,6 +18,7 @@ package se.leap.bitmaskclient.base.fragments;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,6 +33,8 @@ import se.leap.bitmaskclient.eip.EipCommand;
 import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.providersetup.ProviderAPICommand;
 
+import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getPreferredCity;
+import static se.leap.bitmaskclient.base.utils.PreferenceHelper.setPreferredCity;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.UPDATE_INVALID_VPN_CERTIFICATE;
 import static se.leap.bitmaskclient.R.string.warning_option_try_ovpn;
 import static se.leap.bitmaskclient.R.string.warning_option_try_pt;
@@ -111,16 +114,21 @@ public class MainActivityErrorDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         Context applicationContext = getContext().getApplicationContext();
-        builder.setMessage(reasonToFail)
-                .setNegativeButton(R.string.cancel, (dialog, id) -> {
-                });
+        builder.setMessage(reasonToFail);
         switch (downloadError) {
             case ERROR_INVALID_VPN_CERTIFICATE:
                 builder.setPositiveButton(R.string.update_certificate, (dialog, which) ->
                         ProviderAPICommand.execute(getContext(), UPDATE_INVALID_VPN_CERTIFICATE, provider));
+                builder.setNegativeButton(R.string.cancel, (dialog, id) -> {});
                 break;
             case NO_MORE_GATEWAYS:
-                if (provider.supportsPluggableTransports()) {
+                builder.setNegativeButton(R.string.cancel, (dialog, id) -> {});
+                if (getPreferredCity(applicationContext) != null) {
+                    builder.setPositiveButton(R.string.warning_option_try_best, (dialog, which) -> {
+                        setPreferredCity(applicationContext, null);
+                        EipCommand.startVPN(applicationContext, false);
+                    });
+                } else if (provider.supportsPluggableTransports()) {
                     if (getUsePluggableTransports(applicationContext)) {
                         builder.setPositiveButton(warning_option_try_ovpn, ((dialog, which) -> {
                             usePluggableTransports(applicationContext, false);
@@ -139,9 +147,7 @@ public class MainActivityErrorDialog extends DialogFragment {
                 }
                 break;
             case ERROR_VPN_PREPARE:
-                builder.setPositiveButton(R.string.retry, (dialog, which) -> {
-                    EipCommand.startVPN(applicationContext, false);
-                });
+                builder.setPositiveButton(android.R.string.ok, (dialog, which) -> { });
                 break;
             default:
                 break;
