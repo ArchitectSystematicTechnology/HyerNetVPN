@@ -614,12 +614,14 @@ task copyIcsOpenVPNFiles(dependsOn: 'updateIcsOpenVpn') {
 }
 
 task updateIcsOpenVpn( type: Exec ) {
+  commandLine 'git', 'submodule', 'sync'
+  commandLine 'git', 'submodule', 'update', '--init', '--recursive'
 
 }
 
 def getTag() {
   String commit = "git log --pretty=format:'%h' -n 1".execute().text.trim().replaceAll("'", "")
-  return ("git describe --tags --exact-match "+ commit + "| cut -d - -f 1").execute().text.trim().replaceAll("calyx/", "")
+  return ("git describe --tags --exact-match "+ commit).execute().text.trim().replaceAll("calyx/", "")
 }
 
 
@@ -635,6 +637,10 @@ task cleanNative( type: Delete ) {
   }
 }
 
+task updateSdkLicences ( type: Exec ) {
+  println "say yes to licenses"
+  commandLine 'sh', 'yes', '|', 'sdkmanager', '--licenses'
+}
 
 def getCurrentFlavorForBetaOrRelease() {
   Gradle gradle = getGradle()
