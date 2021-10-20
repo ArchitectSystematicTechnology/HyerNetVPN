@@ -2,4 +2,4 @@
 host=review.calyxos.org
 port=29418
 project=CalyxOS/bitmask_android
-defaultbranch=calyx/master
+defaultbranch=calyx/main
