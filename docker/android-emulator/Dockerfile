@@ -1,7 +1,7 @@
-FROM 0xacab.org:4567/leap/bitmask_android/android-sdk:latest
+FROM registry.0xacab.org/leap/bitmask_android/android-sdk:latest
 
 MAINTAINER LEAP Encryption Access Project <info@leap.se>
-LABEL Description="Android SDK baseimage based on debian:stretch" Vendor="LEAP" Version="26"
+LABEL Description="Android SDK baseimage based on debian:bullseye" Vendor="LEAP" Version="27"
 
 # Make sure debconf doesn't complain about lack of interactivity
 ENV DEBIAN_FRONTEND noninteractive
@@ -15,10 +15,9 @@ ENV ANDROID_EMULATOR_USE_SYSTEM_LIBS=1
 RUN apt-get update -qq && \
     apt-get -y dist-upgrade && \
     apt-get -y install gnupg apt-transport-https
-RUN echo 'deb https://apt.dockerproject.org/repo debian-stretch main'> /etc/apt/sources.list.d/docker.list && \
-    curl -s https://apt.dockerproject.org/gpg | apt-key add -
+
 RUN apt-get update -qq && \
-    apt-get -y install docker-engine mesa-utils && \
+    apt-get install -y docker-ce docker-ce-cli mesa-utils && \
     apt-get clean && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

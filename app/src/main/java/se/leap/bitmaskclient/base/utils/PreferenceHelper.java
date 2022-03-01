@@ -2,7 +2,10 @@ package se.leap.bitmaskclient.base.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.Preference;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,6 +17,7 @@ import java.util.Set;
 
 import de.blinkt.openvpn.VpnProfile;
 import se.leap.bitmaskclient.base.models.Provider;
+import se.leap.bitmaskclient.tor.TorStatusObservable;
 
 import static android.content.Context.MODE_PRIVATE;
 import static se.leap.bitmaskclient.base.models.Constants.ALLOW_TETHERING_BLUETOOTH;
@@ -25,6 +29,7 @@ import static se.leap.bitmaskclient.base.models.Constants.EXCLUDED_APPS;
 import static se.leap.bitmaskclient.base.models.Constants.LAST_UPDATE_CHECK;
 import static se.leap.bitmaskclient.base.models.Constants.LAST_USED_PROFILE;
 import static se.leap.bitmaskclient.base.models.Constants.PREFERRED_CITY;
+import static se.leap.bitmaskclient.base.models.Constants.PREFER_UDP;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_CONFIGURED;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_EIP_DEFINITION;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PRIVATE_KEY;
@@ -32,8 +37,9 @@ import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_VPN_CERTIFICA
 import static se.leap.bitmaskclient.base.models.Constants.RESTART_ON_UPDATE;
 import static se.leap.bitmaskclient.base.models.Constants.SHARED_PREFERENCES;
 import static se.leap.bitmaskclient.base.models.Constants.SHOW_EXPERIMENTAL;
+import static se.leap.bitmaskclient.base.models.Constants.USE_BRIDGES;
 import static se.leap.bitmaskclient.base.models.Constants.USE_IPv6_FIREWALL;
-import static se.leap.bitmaskclient.base.models.Constants.USE_PLUGGABLE_TRANSPORTS;
+import static se.leap.bitmaskclient.base.models.Constants.USE_SNOWFLAKE;
 
 /**
  * Created by cyberta on 18.03.18.
@@ -140,12 +146,47 @@ public class PreferenceHelper {
         return getBoolean(context, RESTART_ON_UPDATE, false);
     }
 
-    public static boolean getUsePluggableTransports(Context context) {
-        return getBoolean(context, USE_PLUGGABLE_TRANSPORTS, false);
+    public static boolean getPreferUDP(Context context) {
+        return getBoolean(context, PREFER_UDP, false);
     }
 
-    public static void usePluggableTransports(Context context, boolean isEnabled) {
-        putBoolean(context, USE_PLUGGABLE_TRANSPORTS, isEnabled);
+    public static void preferUDP(Context context, boolean prefer) {
+        putBoolean(context, PREFER_UDP, prefer);
+    }
+
+    public static boolean getUseBridges(SharedPreferences preferences) {
+        return preferences.getBoolean(USE_BRIDGES, false);
+    }
+
+    public static boolean getUseBridges(Context context) {
+        return getBoolean(context, USE_BRIDGES, false);
+    }
+
+    public static void useBridges(Context context, boolean isEnabled) {
+        putBoolean(context, USE_BRIDGES, isEnabled);
+    }
+
+    public static Boolean getUseSnowflake(SharedPreferences preferences) {
+        return preferences.getBoolean(USE_SNOWFLAKE, true);
+    }
+
+    public static void useSnowflake(Context context, boolean isEnabled) {
+        putBoolean(context, USE_SNOWFLAKE, isEnabled);
+        if (!isEnabled) {
+            TorStatusObservable.setProxyPort(-1);
+        }
+    }
+
+    public static boolean hasSnowflakePrefs(SharedPreferences preferences) {
+        return preferences.contains(USE_SNOWFLAKE);
+    }
+
+    public static boolean hasSnowflakePrefs(Context context) {
+        return hasKey(context, USE_SNOWFLAKE);
+    }
+
+    public static Boolean getUseSnowflake(Context context) {
+        return getBoolean(context, USE_SNOWFLAKE, true);
     }
 
     public static void saveBattery(Context context, boolean isEnabled) {
@@ -208,8 +249,9 @@ public class PreferenceHelper {
         return getString(context, PREFERRED_CITY, null);
     }
 
+    @WorkerThread
     public static void setPreferredCity(Context context, String city) {
-        putString(context, PREFERRED_CITY, city);
+        putStringSync(context, PREFERRED_CITY, city);
     }
 
     public static JSONObject getEipDefinitionFromPreferences(SharedPreferences preferences) {
@@ -242,26 +284,47 @@ public class PreferenceHelper {
     }
 
     public static long getLong(Context context, String key, long defValue) {
+        if (context == null) {
+            return defValue;
+        }
         SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         return preferences.getLong(key, defValue);
     }
 
     public static void putLong(Context context, String key, long value) {
+        if (context == null) {
+            return;
+        }
         SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         preferences.edit().putLong(key, value).apply();
     }
 
     public static String getString(Context context, String key, String defValue) {
+        if (context == null) {
+            return defValue;
+        }
         SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         return preferences.getString(key, defValue);
     }
 
+    @WorkerThread
+    public static void putStringSync(Context context, String key, String value) {
+        if (context == null) {
+            return;
+        }
+        SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
+        preferences.edit().putString(key, value).commit();
+    }
+
     public static void putString(Context context, String key, String value) {
+        if (context == null) {
+            return;
+        }
         SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         preferences.edit().putString(key, value).apply();
     }
 
-    public static Boolean getBoolean(Context context, String key, Boolean defValue) {
+    public static boolean getBoolean(Context context, String key, Boolean defValue) {
         if (context == null) {
             return false;
         }
@@ -279,4 +342,12 @@ public class PreferenceHelper {
         preferences.edit().putBoolean(key, value).apply();
     }
 
+    private static Boolean hasKey(Context context, String key) {
+        if (context == null) {
+            return false;
+        }
+
+        SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
+        return preferences.contains(key);
+    }
 }

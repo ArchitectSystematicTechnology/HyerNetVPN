@@ -6,8 +6,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.fragment.app.Fragment;
 
 import butterknife.BindView;
@@ -17,6 +17,8 @@ import se.leap.bitmaskclient.BuildConfig;
 import se.leap.bitmaskclient.R;
 
 import static android.view.View.VISIBLE;
+import static se.leap.bitmaskclient.R.string.about_fragment_title;
+import static se.leap.bitmaskclient.base.utils.ViewHelper.setActionBarTitle;
 
 public class AboutFragment extends Fragment {
 
@@ -25,15 +27,16 @@ public class AboutFragment extends Fragment {
     private Unbinder unbinder;
 
     @BindView(R.id.version)
-    TextView versionTextView;
+    AppCompatTextView versionTextView;
 
     @BindView(R.id.terms_of_service)
-    TextView termsOfService;
+    AppCompatTextView termsOfService;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.f_about, container, false);
         unbinder = ButterKnife.bind(this, view);
+        setActionBarTitle(this, about_fragment_title);
         return view;
     }
 

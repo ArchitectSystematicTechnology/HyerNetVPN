@@ -19,8 +19,6 @@ import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.ListFragment;
 import android.text.SpannableString;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
@@ -37,8 +35,11 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatTextView;
+import androidx.fragment.app.ListFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -55,10 +56,12 @@ import de.blinkt.openvpn.core.Preferences;
 import de.blinkt.openvpn.core.VpnStatus;
 import de.blinkt.openvpn.core.VpnStatus.LogListener;
 import de.blinkt.openvpn.core.VpnStatus.StateListener;
-import se.leap.bitmaskclient.base.models.Constants;
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.base.models.Constants;
 
 import static de.blinkt.openvpn.core.OpenVPNService.humanReadableByteCount;
+import static se.leap.bitmaskclient.R.string.log_fragment_title;
+import static se.leap.bitmaskclient.base.utils.ViewHelper.setActionBarTitle;
 
 public class LogFragment extends ListFragment implements StateListener, SeekBar.OnSeekBarChangeListener, RadioGroup.OnCheckedChangeListener, VpnStatus.ByteCountListener {
     public static final String TAG = LogFragment.class.getSimpleName();
@@ -70,9 +73,9 @@ public class LogFragment extends ListFragment implements StateListener, SeekBar.
     private SeekBar mLogLevelSlider;
     private LinearLayout mOptionsLayout;
     private RadioGroup mTimeRadioGroup;
-    private TextView mUpStatus;
-    private TextView mDownStatus;
-    private TextView mConnectStatus;
+    private AppCompatTextView mUpStatus;
+    private AppCompatTextView mDownStatus;
+    private AppCompatTextView mConnectStatus;
     private boolean mShowOptionsLayout;
     private CheckBox mClearLogCheckBox;
 
@@ -219,11 +222,11 @@ public class LogFragment extends ListFragment implements StateListener, SeekBar.
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TextView v;
+            AppCompatTextView v;
             if (convertView == null)
-                v = new TextView(getActivity());
+                v = new AppCompatTextView(getActivity());
             else
-                v = (TextView) convertView;
+                v = (AppCompatTextView) convertView;
 
             LogItem le = currentLevelEntries.get(position);
             String msg = le.getString(getActivity());
@@ -380,7 +383,7 @@ public class LogFragment extends ListFragment implements StateListener, SeekBar.
 
 
     private LogWindowListAdapter ladapter;
-    private TextView mSpeedView;
+    private AppCompatTextView mSpeedView;
 
 
     @Override
@@ -474,7 +477,7 @@ public class LogFragment extends ListFragment implements StateListener, SeekBar.
                                            int position, long id) {
                 ClipboardManager clipboard = (ClipboardManager)
                         getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("Log Entry", ((TextView) view).getText());
+                ClipData clip = ClipData.newPlainText("Log Entry", ((AppCompatTextView) view).getText());
                 clipboard.setPrimaryClip(clip);
                 Toast.makeText(getActivity(), R.string.copied_entry, Toast.LENGTH_SHORT).show();
                 return true;
@@ -529,6 +532,8 @@ public class LogFragment extends ListFragment implements StateListener, SeekBar.
         mConnectStatus = v.findViewById(R.id.speedStatus);
         if (mShowOptionsLayout)
             mOptionsLayout.setVisibility(View.VISIBLE);
+
+        setActionBarTitle(this, log_fragment_title);
         return v;
     }
 

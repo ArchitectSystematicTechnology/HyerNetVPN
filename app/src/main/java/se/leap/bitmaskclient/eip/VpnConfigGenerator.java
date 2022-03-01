@@ -29,8 +29,10 @@ import java.util.Iterator;
 
 import de.blinkt.openvpn.VpnProfile;
 import de.blinkt.openvpn.core.ConfigParser;
+import de.blinkt.openvpn.core.VpnStatus;
 import de.blinkt.openvpn.core.connection.Connection;
 import se.leap.bitmaskclient.base.models.Provider;
+import se.leap.bitmaskclient.base.utils.ConfigHelper;
 import se.leap.bitmaskclient.pluggableTransports.Obfs4Options;
 
 import static de.blinkt.openvpn.core.connection.Connection.TransportType.OBFS4;
@@ -46,8 +48,9 @@ import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_VPN_CERTIFICA
 import static se.leap.bitmaskclient.base.models.Constants.REMOTE;
 import static se.leap.bitmaskclient.base.models.Constants.TRANSPORT;
 import static se.leap.bitmaskclient.base.models.Constants.TYPE;
-import static se.leap.bitmaskclient.pluggableTransports.Dispatcher.DISPATCHER_IP;
-import static se.leap.bitmaskclient.pluggableTransports.Dispatcher.DISPATCHER_PORT;
+import static se.leap.bitmaskclient.base.models.Constants.UDP;
+import static se.leap.bitmaskclient.pluggableTransports.Shapeshifter.DISPATCHER_IP;
+import static se.leap.bitmaskclient.pluggableTransports.Shapeshifter.DISPATCHER_PORT;
 
 public class VpnConfigGenerator {
     private JSONObject generalConfiguration;
@@ -55,16 +58,18 @@ public class VpnConfigGenerator {
     private JSONObject secrets;
     private JSONObject obfs4Transport;
     private int apiVersion;
+    private boolean preferUDP;
 
 
     public final static String TAG = VpnConfigGenerator.class.getSimpleName();
     private final String newLine = System.getProperty("line.separator"); // Platform new line
 
-    public VpnConfigGenerator(JSONObject generalConfiguration, JSONObject secrets, JSONObject gateway, int apiVersion) throws ConfigParser.ConfigParseError {
+    public VpnConfigGenerator(JSONObject generalConfiguration, JSONObject secrets, JSONObject gateway, int apiVersion, boolean preferUDP) throws ConfigParser.ConfigParseError {
         this.generalConfiguration = generalConfiguration;
         this.gateway = gateway;
         this.secrets = secrets;
         this.apiVersion = apiVersion;
+        this.preferUDP = preferUDP;
         checkCapabilities();
     }
 
@@ -95,7 +100,11 @@ public class VpnConfigGenerator {
         HashMap<Connection.TransportType, VpnProfile> profiles = new HashMap<>();
         profiles.put(OPENVPN, createProfile(OPENVPN));
         if (supportsObfs4()) {
-            profiles.put(OBFS4, createProfile(OBFS4));
+            try {
+                profiles.put(OBFS4, createProfile(OBFS4));
+            } catch (ConfigParser.ConfigParseError | NumberFormatException | JSONException | IOException e) {
+                e.printStackTrace();
+            }
         }
         return profiles;
     }
@@ -162,16 +171,18 @@ public class VpnConfigGenerator {
 
         StringBuilder stringBuilder = new StringBuilder();
         try {
-            String ipAddress = gateway.getString(IP_ADDRESS);
+            String ipAddress = null;
             JSONObject capabilities = gateway.getJSONObject(CAPABILITIES);
             switch (apiVersion) {
                 default:
                 case 1:
                 case 2:
+                    ipAddress = gateway.getString(IP_ADDRESS);
                     gatewayConfigApiv1(stringBuilder, ipAddress, capabilities);
                     break;
                 case 3:
                 case 4:
+                    ipAddress = gateway.optString(IP_ADDRESS);
                     String ipAddress6 = gateway.optString(IP_ADDRESS6);
                     String[] ipAddresses = ipAddress6.isEmpty()  ?
                             new String[]{ipAddress} :
@@ -189,6 +200,7 @@ public class VpnConfigGenerator {
         if (remotes.endsWith(newLine)) {
             remotes = remotes.substring(0, remotes.lastIndexOf(newLine));
         }
+
         return remotes;
     }
 
@@ -204,9 +216,9 @@ public class VpnConfigGenerator {
         int port;
         String protocol;
         JSONArray ports = capabilities.getJSONArray(PORTS);
+        JSONArray protocols = capabilities.getJSONArray(PROTOCOLS);
         for (int i = 0; i < ports.length(); i++) {
             port = ports.getInt(i);
-            JSONArray protocols = capabilities.getJSONArray(PROTOCOLS);
             for (int j = 0; j < protocols.length(); j++) {
                 protocol = protocols.optString(j);
                 String newRemote = REMOTE + " " + ipAddress + " " + port + " " + protocol + newLine;
@@ -220,14 +232,35 @@ public class VpnConfigGenerator {
         String protocol;
         JSONObject openvpnTransport = getTransport(transports, OPENVPN);
         JSONArray ports = openvpnTransport.getJSONArray(PORTS);
-        for (int j = 0; j < ports.length(); j++) {
-            port = ports.getString(j);
-            JSONArray protocols = openvpnTransport.getJSONArray(PROTOCOLS);
-            for (int k = 0; k < protocols.length(); k++) {
-                protocol = protocols.optString(k);
-                for (String ipAddress : ipAddresses) {
-                    String newRemote = REMOTE + " " + ipAddress + " " + port + " " + protocol + newLine;
-                    stringBuilder.append(newRemote);
+        JSONArray protocols = openvpnTransport.getJSONArray(PROTOCOLS);
+        if (preferUDP) {
+            StringBuilder udpRemotes = new StringBuilder();
+            StringBuilder tcpRemotes = new StringBuilder();
+            for (int i = 0; i < protocols.length(); i++) {
+                protocol = protocols.optString(i);
+                for (int j = 0; j < ports.length(); j++) {
+                    port = ports.optString(j);
+                    for (String ipAddress : ipAddresses) {
+                        String newRemote = REMOTE + " " + ipAddress + " " + port + " " + protocol + newLine;
+                        if (UDP.equals(protocol)) {
+                            udpRemotes.append(newRemote);
+                        } else {
+                            tcpRemotes.append(newRemote);
+                        }
+                    }
+                }
+            }
+            stringBuilder.append(udpRemotes.toString());
+            stringBuilder.append(tcpRemotes.toString());
+        } else {
+            for (int j = 0; j < ports.length(); j++) {
+                port = ports.getString(j);
+                for (int k = 0; k < protocols.length(); k++) {
+                    protocol = protocols.optString(k);
+                    for (String ipAddress : ipAddresses) {
+                        String newRemote = REMOTE + " " + ipAddress + " " + port + " " + protocol + newLine;
+                        stringBuilder.append(newRemote);
+                    }
                 }
             }
         }
@@ -247,6 +280,7 @@ public class VpnConfigGenerator {
 
     private void obfs4GatewayConfigMinApiv3(StringBuilder stringBuilder, String[] ipAddresses, JSONArray transports) throws JSONException {
         JSONObject obfs4Transport = getTransport(transports, OBFS4);
+        JSONArray protocols = obfs4Transport.getJSONArray(PROTOCOLS);
         //for now only use ipv4 gateway the syntax route remote_host 255.255.255.255 net_gateway is not yet working
         // https://community.openvpn.net/openvpn/ticket/1161
         /*for (String ipAddress : ipAddresses) {
@@ -258,10 +292,38 @@ public class VpnConfigGenerator {
             return;
         }
 
-        String ipAddress = ipAddresses[ipAddresses.length - 1];
+        // check if at least one address is IPv4, IPv6 is currently not supported for obfs4
+        String ipAddress = null;
+        for (String address : ipAddresses) {
+            if (ConfigHelper.isIPv4(address)) {
+                ipAddress = address;
+                break;
+            }
+            VpnStatus.logWarning("Skipping IP address " + address + " while configuring obfs4.");
+        }
+
+        if (ipAddress == null) {
+            VpnStatus.logError("No matching IPv4 address found to configure obfs4.");
+            return;
+        }
+
+        // check if at least one protocol is TCP, UDP is currently not supported for obfs4
+        boolean hasTcp = false;
+        for (int i = 0; i < protocols.length(); i++) {
+            String protocol = protocols.getString(i);
+            if (protocol.contains("tcp")) {
+                hasTcp = true;
+            }
+        }
+
+        if (!hasTcp) {
+            VpnStatus.logError("obfs4 currently only allows TCP! Skipping obfs4 config for ip " + ipAddress);
+            return;
+        }
+
         String route = "route " + ipAddress + " 255.255.255.255 net_gateway" + newLine;
         stringBuilder.append(route);
-        String remote = REMOTE + " " + DISPATCHER_IP + " " + DISPATCHER_PORT + " " + obfs4Transport.getJSONArray(PROTOCOLS).getString(0) + newLine;
+        String remote = REMOTE + " " + DISPATCHER_IP + " " + DISPATCHER_PORT + " tcp" + newLine;
         stringBuilder.append(remote);
     }
 

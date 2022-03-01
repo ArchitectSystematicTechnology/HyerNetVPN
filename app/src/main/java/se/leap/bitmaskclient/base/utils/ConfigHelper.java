@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Looper;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
@@ -36,6 +37,7 @@ import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -43,11 +45,15 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import se.leap.bitmaskclient.BuildConfig;
-import se.leap.bitmaskclient.providersetup.ProviderAPI;
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.providersetup.ProviderAPI;
 
 import static se.leap.bitmaskclient.base.models.Constants.DEFAULT_BITMASK;
 
@@ -62,6 +68,7 @@ public class ConfigHelper {
     final public static String NG_1024 =
             "eeaf0ab9adb38dd69c33f80afa8fc5e86072618775ff3c0b9ea2314c9c256576d674df7496ea81d3383b4813d692c6e0e0d5d8e250b98be48e495c1d6089dad15dc7d7b46154d6b6ce8ef4ad69b15d4982559b297bcf1885c529f566660e57ec68edbc3c05726cc02fd4cbf4976eaa9afd5138fe8376435b9fc61d2fc0eb06e3";
     final public static BigInteger G = new BigInteger("2");
+    final public static Pattern IPv4_PATTERN = Pattern.compile("^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$");
 
     public static boolean checkErroneousDownload(String downloadedString) {
         try {
@@ -95,25 +102,28 @@ public class ConfigHelper {
         return ret;
     }
 
-    public static X509Certificate parseX509CertificateFromString(String certificateString) {
-        java.security.cert.Certificate certificate = null;
+    public static ArrayList<X509Certificate> parseX509CertificatesFromString(String certificateString) {
+        Collection<? extends Certificate> certificates;
         CertificateFactory cf;
         try {
             cf = CertificateFactory.getInstance("X.509");
 
-            certificateString = certificateString.replaceFirst("-----BEGIN CERTIFICATE-----", "").replaceFirst("-----END CERTIFICATE-----", "").trim();
-            byte[] cert_bytes = Base64.decode(certificateString);
-            InputStream caInput = new ByteArrayInputStream(cert_bytes);
-            try {
-                certificate = cf.generateCertificate(caInput);
-                System.out.println("ca=" + ((X509Certificate) certificate).getSubjectDN());
-            } finally {
-                caInput.close();
+            certificateString = certificateString.replaceAll("-----BEGIN CERTIFICATE-----", "").trim().replaceAll("-----END CERTIFICATE-----", "").trim();
+            byte[] certBytes = Base64.decode(certificateString);
+            try (InputStream caInput = new ByteArrayInputStream(certBytes)) {
+                certificates = cf.generateCertificates(caInput);
+                if (certificates != null) {
+                    for (Certificate cert : certificates) {
+                        System.out.println("ca=" + ((X509Certificate) cert).getSubjectDN());
+                    }
+                    return (ArrayList<X509Certificate>) certificates;
+                }
             }
-        } catch (NullPointerException | CertificateException | IOException | IllegalArgumentException e) {
-            return null;
+        } catch (NullPointerException | CertificateException | IOException | IllegalArgumentException | ClassCastException e) {
+            e.printStackTrace();
         }
-        return (X509Certificate) certificate;
+
+        return null;
     }
 
     public static RSAPrivateKey parseRsaKeyFromString(String rsaKeyString) {
@@ -193,6 +203,26 @@ public class ConfigHelper {
         return Calendar.getInstance().get(Calendar.ZONE_OFFSET) / 3600000;
     }
 
+    public static int timezoneDistance(int local_timezone, int remoteTimezone) {
+        // Distance along the numberline of Prime Meridian centric, assumes UTC-11 through UTC+12
+        int dist = Math.abs(local_timezone - remoteTimezone);
+        // Farther than 12 timezones and it's shorter around the "back"
+        if (dist > 12)
+            dist = 12 - (dist - 12); // Well i'll be. Absolute values make equations do funny things.
+        return dist;
+    }
+
+    /**
+     *
+     * @param remoteTimezone
+     * @return a value between 0.1 and 1.0
+     */
+    public static double getConnectionQualityFromTimezoneDistance(int remoteTimezone) {
+        int localTimeZone = ConfigHelper.getCurrentTimezone();
+        int distance = ConfigHelper.timezoneDistance(localTimeZone, remoteTimezone);
+        return Math.max(distance / 12.0, 0.1);
+    }
+
     public static String getProviderFormattedString(Resources resources, @StringRes int resourceId) {
         String appName = resources.getString(R.string.app_name);
         return resources.getString(resourceId, appName);
@@ -203,6 +233,8 @@ public class ConfigHelper {
                 (string1 != null && string1.equals(string2));
     }
 
+    @SuppressWarnings("unused")
+    // FatWeb Flavor uses that for auto-update
     public static String getApkFileName() {
         try {
             return BuildConfig.update_apk_url.substring(BuildConfig.update_apk_url.lastIndexOf("/"));
@@ -211,6 +243,8 @@ public class ConfigHelper {
         }
     }
 
+    @SuppressWarnings("unused")
+    // FatWeb Flavor uses that for auto-update
     public static String getVersionFileName() {
         try {
             return BuildConfig.version_file_url.substring(BuildConfig.version_file_url.lastIndexOf("/"));
@@ -219,12 +253,22 @@ public class ConfigHelper {
         }
     }
 
+    @SuppressWarnings("unused")
+    // FatWeb Flavor uses that for auto-update
     public static String getSignatureFileName() {
         try {
             return BuildConfig.signature_url.substring(BuildConfig.signature_url.lastIndexOf("/"));
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static boolean isIPv4(String ipv4) {
+        if (ipv4 == null) {
+            return false;
+        }
+        Matcher matcher = IPv4_PATTERN.matcher(ipv4);
+        return matcher.matches();
     }
 
 }

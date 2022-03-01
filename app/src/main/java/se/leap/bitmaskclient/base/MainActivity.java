@@ -41,6 +41,7 @@ import se.leap.bitmaskclient.base.fragments.ExcludeAppsFragment;
 import se.leap.bitmaskclient.base.fragments.LogFragment;
 import se.leap.bitmaskclient.base.fragments.MainActivityErrorDialog;
 import se.leap.bitmaskclient.base.fragments.NavigationDrawerFragment;
+import se.leap.bitmaskclient.base.fragments.SettingsFragment;
 import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.base.models.ProviderObservable;
 import se.leap.bitmaskclient.base.utils.PreferenceHelper;
@@ -60,6 +61,7 @@ import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_LAUNCH_VPN;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_PREPARE_VPN;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_ACTION_START;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_REQUEST;
+import static se.leap.bitmaskclient.base.models.Constants.LOCATION;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_KEY;
 import static se.leap.bitmaskclient.base.models.Constants.REQUEST_CODE_CONFIGURE_LEAP;
 import static se.leap.bitmaskclient.base.models.Constants.REQUEST_CODE_LOG_IN;
@@ -75,7 +77,7 @@ import static se.leap.bitmaskclient.providersetup.ProviderAPI.INCORRECTLY_UPDATE
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.USER_MESSAGE;
 
 
-public class MainActivity extends AppCompatActivity implements EipSetupListener, Observer, ExcludeAppsFragment.ExcludedAppsCallback {
+public class MainActivity extends AppCompatActivity implements EipSetupListener, Observer {
 
     public final static String TAG = MainActivity.class.getSimpleName();
 
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements EipSetupListener,
 
     public final static String ACTION_SHOW_VPN_FRAGMENT = "action_show_vpn_fragment";
     public final static String ACTION_SHOW_LOG_FRAGMENT = "action_show_log_fragment";
+    public final static String ACTION_SHOW_DIALOG_FRAGMENT = "action_show_dialog_fragment";
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -112,12 +115,18 @@ public class MainActivity extends AppCompatActivity implements EipSetupListener,
     public void onBackPressed() {
         FragmentManagerEnhanced fragmentManagerEnhanced = new FragmentManagerEnhanced(getSupportFragmentManager());
         Fragment fragment = fragmentManagerEnhanced.findFragmentByTag(MainActivity.TAG);
-        if (fragment == null || !(fragment instanceof EipFragment)) {
-            Fragment eipFragment = new EipFragment();
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(PROVIDER_KEY, provider);
-            eipFragment.setArguments(bundle);
-            fragmentManagerEnhanced.replace(R.id.main_container, eipFragment, MainActivity.TAG);
+        //FIXME: use proper navigation, this is only a workaround
+        if (!(fragment instanceof EipFragment)) {
+            Fragment newFragment;
+            if (fragment instanceof ExcludeAppsFragment) {
+                newFragment = new SettingsFragment();
+            } else {
+                newFragment = new EipFragment();
+                Bundle bundle = new Bundle();
+                bundle.putParcelable(PROVIDER_KEY, provider);
+                newFragment.setArguments(bundle);
+            }
+            fragmentManagerEnhanced.replace(R.id.main_container, newFragment, MainActivity.TAG);
             hideActionBarSubTitle();
         } else {
             super.onBackPressed();
@@ -152,6 +161,13 @@ public class MainActivity extends AppCompatActivity implements EipSetupListener,
                 fragment = new LogFragment();
                 setActionBarTitle(R.string.log_fragment_title);
                 break;
+            case ACTION_SHOW_DIALOG_FRAGMENT:
+                if (intent.hasExtra(EIP.ERRORID)) {
+                    String errorId = intent.getStringExtra(EIP.ERRORID);
+                    String error = intent.getStringExtra(EIP.ERRORS);
+                    String args = intent.getStringExtra(LOCATION);
+                    showMainActivityErrorDialog(error, EIP.EIPErrors.valueOf(errorId), args);
+                }
             default:
                 break;
         }
@@ -195,19 +211,20 @@ public class MainActivity extends AppCompatActivity implements EipSetupListener,
             storeProviderInPreferences(preferences, provider);
             ProviderObservable.getInstance().updateProvider(provider);
             if (!provider.supportsPluggableTransports()) {
-                PreferenceHelper.usePluggableTransports(this, false);
+                PreferenceHelper.useBridges(this, false);
             }
             navigationDrawerFragment.refresh();
 
             switch (requestCode) {
                 case REQUEST_CODE_SWITCH_PROVIDER:
-                    EipCommand.stopVPN(this.getApplicationContext());
+                    EipCommand.stopVPN(this);
+                    EipCommand.startVPN(this, false);
                     break;
                 case REQUEST_CODE_CONFIGURE_LEAP:
                     Log.d(TAG, "REQUEST_CODE_CONFIGURE_LEAP - onActivityResult - MainActivity");
                     break;
                 case REQUEST_CODE_LOG_IN:
-                    EipCommand.startVPN(this.getApplicationContext(), true);
+                    EipCommand.startVPN(this, true);
                     break;
             }
         }
@@ -323,12 +340,12 @@ public class MainActivity extends AppCompatActivity implements EipSetupListener,
     /**
      * Shows an error dialog
      */
-    public void showMainActivityErrorDialog(String reasonToFail, EIP.EIPErrors error) {
+    public void showMainActivityErrorDialog(String reasonToFail, EIP.EIPErrors error, String... args) {
         try {
             FragmentTransaction fragmentTransaction = new FragmentManagerEnhanced(
                     this.getSupportFragmentManager()).removePreviousFragment(
                     MainActivityErrorDialog.TAG);
-            DialogFragment newFragment = MainActivityErrorDialog.newInstance(provider, reasonToFail, error);
+            DialogFragment newFragment = MainActivityErrorDialog.newInstance(provider, reasonToFail, error, args);
             newFragment.show(fragmentTransaction, MainActivityErrorDialog.TAG);
         } catch (IllegalStateException | NullPointerException e) {
             e.printStackTrace();
@@ -371,11 +388,5 @@ public class MainActivity extends AppCompatActivity implements EipSetupListener,
             intent.putExtra(USER_MESSAGE, userMessage);
         }
         startActivityForResult(intent, REQUEST_CODE_LOG_IN);
-    }
-
-
-    @Override
-    public void onAppsExcluded(int number) {
-        navigationDrawerFragment.onAppsExcluded(number);
     }
 }

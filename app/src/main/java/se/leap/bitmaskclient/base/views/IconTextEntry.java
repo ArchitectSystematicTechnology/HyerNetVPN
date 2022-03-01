@@ -4,25 +4,27 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import androidx.annotation.ColorRes;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
+
+import androidx.annotation.ColorRes;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.AppCompatTextView;
 
 import se.leap.bitmaskclient.R;
 
 
 public class IconTextEntry extends LinearLayout {
 
-    private TextView textView;
-    private ImageView iconView;
-    private TextView subtitleView;
+    private AppCompatTextView textView;
+    private AppCompatImageView iconView;
+    private AppCompatTextView subtitleView;
 
     public IconTextEntry(Context context) {
         super(context);
@@ -71,6 +73,9 @@ public class IconTextEntry extends LinearLayout {
             if (drawable != null) {
                 iconView.setImageDrawable(drawable);
             }
+
+            boolean singleLine = typedArray.getBoolean(R.styleable.IconTextEntry_singleLine, true);
+            subtitleView.setSingleLine(singleLine);
 
             typedArray.recycle();
         }

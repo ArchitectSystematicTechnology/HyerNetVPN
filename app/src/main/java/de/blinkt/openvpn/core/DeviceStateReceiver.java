@@ -17,6 +17,7 @@ import android.preference.PreferenceManager;
 
 import se.leap.bitmaskclient.R;
 import de.blinkt.openvpn.core.VpnStatus.ByteCountListener;
+import se.leap.bitmaskclient.base.utils.PreferenceHelper;
 import se.leap.bitmaskclient.tethering.TetheringObservable;
 
 import java.util.LinkedList;
@@ -44,7 +45,7 @@ public class DeviceStateReceiver extends BroadcastReceiver implements ByteCountL
     connectState userpause = connectState.SHOULDBECONNECTED;
 
     private String lastStateMsg = null;
-    private java.lang.Runnable mDelayDisconnectRunnable = new Runnable() {
+    private final java.lang.Runnable mDelayDisconnectRunnable = new Runnable() {
         @Override
         public void run() {
             if (!(network == connectState.PENDINGDISCONNECT))
@@ -82,7 +83,7 @@ public class DeviceStateReceiver extends BroadcastReceiver implements ByteCountL
         long data;
     }
 
-    private LinkedList<Datapoint> trafficdata = new LinkedList<>();
+    private final LinkedList<Datapoint> trafficdata;
 
 
     @Override
@@ -127,9 +128,10 @@ public class DeviceStateReceiver extends BroadcastReceiver implements ByteCountL
         }
     }
 
-    public DeviceStateReceiver(OpenVPNManagement magnagement) {
+    public DeviceStateReceiver(OpenVPNManagement management) {
         super();
-        mManagement = magnagement;
+        trafficdata = new LinkedList<>();
+        mManagement = management;
         mManagement.setPauseCallback(this);
         mDisconnectHandler = new Handler();
     }
@@ -137,13 +139,10 @@ public class DeviceStateReceiver extends BroadcastReceiver implements ByteCountL
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        SharedPreferences prefs = Preferences.getDefaultSharedPreferences(context);
-
-
         if (ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.getAction())) {
             networkStateChange(context);
         } else if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
-            boolean screenOffPause = prefs.getBoolean("screenoff", false);
+            boolean screenOffPause = PreferenceHelper.getSaveBattery(context);
             boolean isTethering = TetheringObservable.getInstance().getTetheringState().isVpnTetheringRunning();
             if (screenOffPause && !isTethering) {
                 if (VpnStatus.getLastConnectedVpnProfile() != null && !VpnStatus.getLastConnectedVpnProfile().mPersistTun)

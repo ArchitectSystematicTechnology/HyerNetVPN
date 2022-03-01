@@ -18,32 +18,32 @@ package se.leap.bitmaskclient.base.fragments;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 
 import org.json.JSONObject;
 
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.eip.EIP;
 import se.leap.bitmaskclient.eip.EipCommand;
-import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.providersetup.ProviderAPICommand;
 
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getPreferredCity;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.setPreferredCity;
-import static se.leap.bitmaskclient.providersetup.ProviderAPI.UPDATE_INVALID_VPN_CERTIFICATE;
 import static se.leap.bitmaskclient.R.string.warning_option_try_ovpn;
 import static se.leap.bitmaskclient.R.string.warning_option_try_pt;
+import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getPreferredCity;
+import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getUseBridges;
+import static se.leap.bitmaskclient.base.utils.PreferenceHelper.setPreferredCity;
+import static se.leap.bitmaskclient.base.utils.PreferenceHelper.useBridges;
 import static se.leap.bitmaskclient.eip.EIP.EIPErrors.UNKNOWN;
 import static se.leap.bitmaskclient.eip.EIP.EIPErrors.valueOf;
-import static se.leap.bitmaskclient.eip.EIP.ERRORS;
 import static se.leap.bitmaskclient.eip.EIP.ERRORID;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getUsePluggableTransports;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.usePluggableTransports;
+import static se.leap.bitmaskclient.eip.EIP.ERRORS;
+import static se.leap.bitmaskclient.providersetup.ProviderAPI.UPDATE_INVALID_VPN_CERTIFICATE;
 
 /**
  * Implements an error dialog for the main activity.
@@ -57,6 +57,7 @@ public class MainActivityErrorDialog extends DialogFragment {
     final private static String KEY_REASON_TO_FAIL = "key reason to fail";
     final private static String KEY_PROVIDER = "key provider";
     private String reasonToFail;
+    private String[] args;
     private EIP.EIPErrors downloadError = UNKNOWN;
 
     private Provider provider;
@@ -71,11 +72,12 @@ public class MainActivityErrorDialog extends DialogFragment {
     /**
      * @return a new instance of this DialogFragment.
      */
-    public static DialogFragment newInstance(Provider provider, String reasonToFail, EIP.EIPErrors error) {
+    public static DialogFragment newInstance(Provider provider, String reasonToFail, EIP.EIPErrors error, String... args) {
         MainActivityErrorDialog dialogFragment = new MainActivityErrorDialog();
         dialogFragment.reasonToFail = reasonToFail;
         dialogFragment.provider = provider;
         dialogFragment.downloadError = error;
+        dialogFragment.args = args;
         return dialogFragment;
     }
 
@@ -125,18 +127,20 @@ public class MainActivityErrorDialog extends DialogFragment {
                 builder.setNegativeButton(R.string.cancel, (dialog, id) -> {});
                 if (getPreferredCity(applicationContext) != null) {
                     builder.setPositiveButton(R.string.warning_option_try_best, (dialog, which) -> {
-                        setPreferredCity(applicationContext, null);
-                        EipCommand.startVPN(applicationContext, false);
+                        new Thread(() -> {
+                            setPreferredCity(applicationContext, null);
+                            EipCommand.startVPN(applicationContext, false);
+                        }).start();
                     });
                 } else if (provider.supportsPluggableTransports()) {
-                    if (getUsePluggableTransports(applicationContext)) {
+                    if (getUseBridges(applicationContext)) {
                         builder.setPositiveButton(warning_option_try_ovpn, ((dialog, which) -> {
-                            usePluggableTransports(applicationContext, false);
+                            useBridges(applicationContext, false);
                             EipCommand.startVPN(applicationContext, false);
                         }));
                     } else {
                         builder.setPositiveButton(warning_option_try_pt, ((dialog, which) -> {
-                            usePluggableTransports(applicationContext, true);
+                            useBridges(applicationContext, true);
                             EipCommand.startVPN(applicationContext, false);
                         }));
                     }
@@ -147,9 +151,8 @@ public class MainActivityErrorDialog extends DialogFragment {
                 }
                 break;
             case ERROR_VPN_PREPARE:
-                builder.setPositiveButton(android.R.string.ok, (dialog, which) -> { });
-                break;
             default:
+                builder.setPositiveButton(android.R.string.ok, (dialog, which) -> { });
                 break;
         }
 

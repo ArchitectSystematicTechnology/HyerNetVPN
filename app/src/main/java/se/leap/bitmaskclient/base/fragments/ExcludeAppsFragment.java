@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,13 +20,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.CompoundButton;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SearchView;
-import android.widget.TextView;
+
+import androidx.appcompat.widget.AppCompatTextView;
+import androidx.fragment.app.Fragment;
 
 import java.util.Collections;
 import java.util.List;
@@ -38,30 +38,20 @@ import java.util.Vector;
 import de.blinkt.openvpn.VpnProfile;
 import se.leap.bitmaskclient.R;
 import se.leap.bitmaskclient.base.utils.PreferenceHelper;
+import se.leap.bitmaskclient.base.utils.ViewHelper;
+import se.leap.bitmaskclient.base.views.SimpleCheckBox;
+
+import static se.leap.bitmaskclient.R.string.exclude_apps_fragment_title;
 
 /**
  * Created by arne on 16.11.14.
  */
-public class ExcludeAppsFragment extends Fragment implements AdapterView.OnItemClickListener, CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+public class ExcludeAppsFragment extends Fragment implements AdapterView.OnItemClickListener, SimpleCheckBox.OnCheckedChangeListener, View.OnClickListener {
     private ListView mListView;
     private VpnProfile mProfile;
     private PackageAdapter mListAdapter;
 
     private Set<String> apps;
-
-    public interface ExcludedAppsCallback {
-        void onAppsExcluded(int number);
-    }
-
-    private ExcludedAppsCallback callback;
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof ExcludedAppsCallback) {
-            callback = (ExcludedAppsCallback) context;
-        }
-    }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -77,11 +67,11 @@ public class ExcludeAppsFragment extends Fragment implements AdapterView.OnItemC
     static class AppViewHolder {
         public ApplicationInfo mInfo;
         public View rootView;
-        public TextView appName;
+        public AppCompatTextView appName;
         public ImageView appIcon;
-        //public TextView appSize;
-        //public TextView disabled;
-        public CompoundButton checkBox;
+        //public AppCompatTextView appSize;
+        //public AppCompatTextView disabled;
+        public SimpleCheckBox checkBox;
 
         static public AppViewHolder createOrRecycle(LayoutInflater inflater, View convertView, ViewGroup parent) {
             if (convertView == null) {
@@ -107,7 +97,7 @@ public class ExcludeAppsFragment extends Fragment implements AdapterView.OnItemC
     }
 
     @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+    public void onCheckedChanged(SimpleCheckBox buttonView, boolean isChecked) {
         String packageName = (String) buttonView.getTag();
 
         if (isChecked) {
@@ -117,10 +107,6 @@ public class ExcludeAppsFragment extends Fragment implements AdapterView.OnItemC
         } else {
             Log.d("openvpn", "removing from allowed apps" + packageName);
             apps.remove(packageName);
-        }
-
-        if (callback != null) {
-            callback.onAppsExcluded(apps.size());
         }
     }
 
@@ -326,6 +312,7 @@ public class ExcludeAppsFragment extends Fragment implements AdapterView.OnItemC
         mListView.setOnItemClickListener(this);
 
         mListView.setEmptyView(v.findViewById(R.id.loading_container));
+        ViewHelper.setActionBarTitle(this, exclude_apps_fragment_title);
 
         new Thread(() -> mListAdapter.populateList(getActivity())).start();
 

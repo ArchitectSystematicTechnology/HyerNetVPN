@@ -23,6 +23,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -111,6 +112,7 @@ public class DownloadNotificationManager {
                 NotificationManager.IMPORTANCE_LOW);
         channel.setSound(null, null);
         channel.setDescription(description);
+        channel.setLightColor(Color.BLUE);
         // Register the channel with the system; you can't change the importance
         // or other notification behaviors after this
         notificationManager.createNotificationChannel(channel);
