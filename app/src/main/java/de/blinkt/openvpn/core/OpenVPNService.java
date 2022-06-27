@@ -50,6 +50,7 @@ import de.blinkt.openvpn.core.VpnStatus.StateListener;
 import de.blinkt.openvpn.core.connection.Connection;
 import de.blinkt.openvpn.core.connection.Obfs4Connection;
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.capture.StreamCapture;
 import se.leap.bitmaskclient.eip.EipStatus;
 import se.leap.bitmaskclient.eip.VpnNotificationManager;
 import se.leap.bitmaskclient.firewall.FirewallManager;
@@ -766,7 +767,14 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
 
         try {
             //Debug.stopMethodTracing();
-            ParcelFileDescriptor tun = builder.establish();
+            ParcelFileDescriptor tun;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                StreamCapture.initPacketUtils(getApplicationContext());
+                StreamCapture.setMTU(mMtu);
+                tun = StreamCapture.getInstance().getCapturedParcelFileDescriptor(builder.establish());
+            } else {
+                tun = builder.establish();
+            }
             if (tun == null)
                 throw new NullPointerException("Android establish() method returned null (Really broken network configuration?)");
             return tun;
