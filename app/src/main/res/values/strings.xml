@@ -206,5 +206,12 @@
   <string name="cancel_connection">Disconnect</string>
   <string name="unknown_location">Unknown location</string>
   <string name="splash_footer">Developed by LEAP</string>
+  <string name="title_root">Kernel</string>
+  <string name="title_mediaserver">Media Server</string>
+  <string name="title_multicast_dns_responder">Multicast DNS Responder</string>
+  <string name="title_gpsdaemon">GPS Deamon</string>
+  <string name="title_dnsdaemon">DNS Deamon</string>
+  <string name="title_nobody">Nobody</string>
+  <string name="unknown">Unknown</string>
 
 </resources>
