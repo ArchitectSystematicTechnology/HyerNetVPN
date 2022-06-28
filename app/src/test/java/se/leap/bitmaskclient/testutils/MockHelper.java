@@ -536,7 +536,7 @@ public class MockHelper {
         when(TorStatusObservable.getLastTorLog()).thenReturn("");
         when(TorStatusObservable.getLastSnowflakeLog()).thenReturn("");
         AtomicBoolean waitUntilSuccess = new AtomicBoolean(false);
-        when(TorStatusObservable.getProxyPort()).thenAnswer((Answer<Integer>) invocation -> {
+        when(TorStatusObservable.getHttpProxyPort()).thenAnswer((Answer<Integer>) invocation -> {
             if (waitUntilSuccess.get()) {
                 return 8118;
             }

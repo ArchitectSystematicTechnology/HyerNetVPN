@@ -47,7 +47,7 @@ public class StreamCapture {
     private PacketUtils packetUtils;
     private HashSet<Integer> torifiedUids = new HashSet<>();
 
-    public static void init(@NonNull Context context) {
+    public static void initPacketUtils(@NonNull Context context) {
         INSTANCE.packetUtils = new PacketUtils(context.getApplicationContext());
     }
 

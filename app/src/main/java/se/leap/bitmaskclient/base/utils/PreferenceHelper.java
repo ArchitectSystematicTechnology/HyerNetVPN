@@ -254,7 +254,7 @@ public class PreferenceHelper {
     public static void useSnowflake(Context context, boolean isEnabled) {
         putBoolean(context, USE_SNOWFLAKE, isEnabled);
         if (!isEnabled) {
-            TorStatusObservable.setProxyPort(-1);
+            TorStatusObservable.setHttpProxyPort(-1);
         }
     }
 

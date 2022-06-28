@@ -294,7 +294,7 @@ public class TorStatusObservable extends Observable {
         instance.notifyObservers();
     }
 
-    public static int getProxyPort() {
+    public static int getHttpProxyPort() {
         return getInstance().httpProxyPort;
     }
 

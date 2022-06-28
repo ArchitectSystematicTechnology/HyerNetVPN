@@ -56,7 +56,7 @@ import static se.leap.bitmaskclient.providersetup.ProviderAPI.ERRORS;
 import static se.leap.bitmaskclient.providersetup.ProviderSetupFailedDialog.DOWNLOAD_ERRORS.ERROR_CERTIFICATE_PINNING;
 import static se.leap.bitmaskclient.providersetup.ProviderSetupFailedDialog.DOWNLOAD_ERRORS.ERROR_CORRUPTED_PROVIDER_JSON;
 import static se.leap.bitmaskclient.tor.TorStatusObservable.TorStatus.OFF;
-import static se.leap.bitmaskclient.tor.TorStatusObservable.getProxyPort;
+import static se.leap.bitmaskclient.tor.TorStatusObservable.getHttpProxyPort;
 
 /**
  * Implements the logic of the provider api http requests. The methods of this class need to be called from
@@ -296,7 +296,7 @@ public class ProviderApiManager extends ProviderApiManagerBase {
         String responseString;
         JSONObject errorJson = new JSONObject();
 
-        OkHttpClient okHttpClient = clientGenerator.initCommercialCAHttpClient(errorJson, getProxyPort());
+        OkHttpClient okHttpClient = clientGenerator.initCommercialCAHttpClient(errorJson, getHttpProxyPort());
         if (okHttpClient == null) {
             return errorJson.toString();
         }
@@ -362,7 +362,7 @@ public class ProviderApiManager extends ProviderApiManagerBase {
     private String downloadFromUrlWithProviderCA(String urlString, Provider provider, boolean allowRetry) {
         String responseString;
         JSONObject errorJson = new JSONObject();
-        OkHttpClient okHttpClient = clientGenerator.initSelfSignedCAHttpClient(provider.getCaCert(), getProxyPort(), errorJson);
+        OkHttpClient okHttpClient = clientGenerator.initSelfSignedCAHttpClient(provider.getCaCert(), getHttpProxyPort(), errorJson);
         if (okHttpClient == null) {
             return errorJson.toString();
         }
@@ -397,7 +397,7 @@ public class ProviderApiManager extends ProviderApiManagerBase {
         JSONObject initError = new JSONObject();
         String responseString;
 
-        OkHttpClient okHttpClient = clientGenerator.initSelfSignedCAHttpClient(caCert, getProxyPort(), initError);
+        OkHttpClient okHttpClient = clientGenerator.initSelfSignedCAHttpClient(caCert, getHttpProxyPort(), initError);
         if (okHttpClient == null) {
             return initError.toString();
         }

@@ -616,7 +616,7 @@ public class ProviderApiManagerTest {
 
         providerApiManager.handleIntent(providerApiCommand);
         // also assert that Tor was not allowed to start
-        assertEquals(-1, TorStatusObservable.getProxyPort());
+        assertEquals(-1, TorStatusObservable.getHttpProxyPort());
 
     }
 
@@ -716,7 +716,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(null);
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertEquals(8118, TorStatusObservable.getProxyPort());
+        assertEquals(8118, TorStatusObservable.getHttpProxyPort());
     }
 
 
@@ -736,7 +736,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(null);
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertEquals(-1, TorStatusObservable.getProxyPort());
+        assertEquals(-1, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
@@ -755,7 +755,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(new TimeoutException("Tor took too long to start."));
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertEquals(-1, TorStatusObservable.getProxyPort());
+        assertEquals(-1, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
@@ -776,7 +776,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(null);
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertEquals(8118, TorStatusObservable.getProxyPort());
+        assertEquals(8118, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
@@ -797,7 +797,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(new TimeoutException("This timeout exception is never thrown"));
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertEquals(-1, TorStatusObservable.getProxyPort());
+        assertEquals(-1, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
@@ -818,7 +818,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(null);
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertNotEquals(-1, TorStatusObservable.getProxyPort());
+        assertNotEquals(-1, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
@@ -840,7 +840,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(new TimeoutException("This timeout exception is never thrown"));
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertEquals(-1, TorStatusObservable.getProxyPort());
+        assertEquals(-1, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
@@ -862,7 +862,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(null);
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertNotEquals(-1, TorStatusObservable.getProxyPort());
+        assertNotEquals(-1, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
@@ -889,7 +889,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(new InterruptedException("Tor thread was interrupted."));
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertEquals(-1, TorStatusObservable.getProxyPort());
+        assertEquals(-1, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
@@ -912,7 +912,7 @@ public class ProviderApiManagerTest {
         mockTorStatusObservable(new TimeoutException("Tor took too long to start."));
 
         providerApiManager.handleIntent(providerApiCommand);
-        assertEquals(-1, TorStatusObservable.getProxyPort());
+        assertEquals(-1, TorStatusObservable.getHttpProxyPort());
     }
 
     @Test
