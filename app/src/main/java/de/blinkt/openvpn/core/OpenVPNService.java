@@ -252,6 +252,7 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
                         obfsVpnClient.stop();
                         obfsVpnClient = null;
                     }
+                    StreamCapture.getInstance().closeIgnoreException();
                     TorServiceCommand.stopTorService(this);
                     VpnStatus.updateStateString("NOPROCESS", "VPN STOPPED", R.string.state_noprocess, ConnectionStatus.LEVEL_NOTCONNECTED);
                 }
