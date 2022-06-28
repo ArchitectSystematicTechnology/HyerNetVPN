@@ -22,6 +22,7 @@ import static se.leap.bitmaskclient.tor.TorStatusObservable.SnowflakeStatus.RETR
 import static se.leap.bitmaskclient.tor.TorStatusObservable.SnowflakeStatus.RETRY_HTTP_RENDEZVOUS;
 import static se.leap.bitmaskclient.tor.TorStatusObservable.SnowflakeStatus.STARTED;
 import static se.leap.bitmaskclient.tor.TorStatusObservable.SnowflakeStatus.STOPPED;
+import static se.leap.bitmaskclient.tor.TorStatusObservable.TorStatus.ON;
 
 import android.content.Context;
 import android.util.Log;
@@ -86,7 +87,8 @@ public class TorStatusObservable extends Observable {
     private String lastError;
     private String lastTorLog = "";
     private String lastSnowflakeLog = "";
-    private int port = -1;
+    private int httpProxyPort = -1;
+    private int socksProxyPort = -1;
     private int bootstrapPercent = -1;
     private int retrySnowflakeRendezVous = 0;
     private final Vector<String> lastLogs = new Vector<>(100);
@@ -279,16 +281,43 @@ public class TorStatusObservable extends Observable {
         instance.notifyObservers();
     }
 
-    public static void setProxyPort(int port) {
-        getInstance().port = port;
+    public static void setProxyPorts(int httpProxyPort, int socksProxyPort) {
+        getInstance().httpProxyPort = httpProxyPort;
+        getInstance().socksProxyPort = socksProxyPort;
+        instance.setChanged();
+        instance.notifyObservers();
+    }
+
+    public static void setHttpProxyPort(int port) {
+        getInstance().httpProxyPort = port;
         instance.setChanged();
         instance.notifyObservers();
     }
 
     public static int getProxyPort() {
-        return getInstance().port;
+        return getInstance().httpProxyPort;
     }
 
+    public static void setSocksProxyPort(int port) {
+        getInstance().socksProxyPort = port;
+        instance.setChanged();
+        instance.notifyObservers();
+    }
+
+    public static int getSocksProxyPort() {
+        return getInstance().socksProxyPort;
+    }
+
+    public static void waitForTorCircuits() throws InterruptedException, TimeoutException {
+        if (TorStatusObservable.getStatus() == ON) {
+            return;
+        }
+        TorStatusObservable.waitUntil(TorStatusObservable::isTorOnOrCancelled, 180);
+    }
+
+    private static boolean isTorOnOrCancelled() {
+        return TorStatusObservable.getStatus() == ON || TorStatusObservable.isCancelled();
+    }
 
     @Nullable
     public static String getLastTorLog() {
@@ -325,7 +354,8 @@ public class TorStatusObservable extends Observable {
     public static void markCancelled() {
         if (!getInstance().cancelled) {
             getInstance().cancelled = true;
-            getInstance().port = -1;
+            getInstance().httpProxyPort = -1;
+            getInstance().socksProxyPort = -1;
             getInstance().setChanged();
             getInstance().notifyObservers();
         }

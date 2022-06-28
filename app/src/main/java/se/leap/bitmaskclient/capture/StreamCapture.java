@@ -20,15 +20,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.HashSet;
 
 import se.leap.bitmaskclient.capture.ip.IPPacket;
 import se.leap.bitmaskclient.capture.ip.TCPPacket;
 import se.leap.bitmaskclient.capture.ip.UDPPacket;
+import se.leap.bitmaskclient.tor.TorStatusObservable;
+import se.leap.bitmaskclient.tor.TorTunnel;
 
 public class StreamCapture {
 
     private static final String TAG = StreamCapture.class.getSimpleName();
-    private static final String VERSION="0.0.3";
+    private static final String VERSION="0.0.4";
 
     private static final int FORWARD_DNS_PORT = 5300;
     private static final StreamCapture INSTANCE = new StreamCapture();
@@ -42,9 +45,14 @@ public class StreamCapture {
     private static TransferThread from_remote;
 
     private PacketUtils packetUtils;
+    private HashSet<Integer> torifiedUids = new HashSet<>();
 
-    public static void initPacketUtils(@NonNull Context context) {
+    public static void init(@NonNull Context context) {
         INSTANCE.packetUtils = new PacketUtils(context.getApplicationContext());
+    }
+
+    public static void setTorifiedUids(HashSet<Integer> uids) {
+        INSTANCE.torifiedUids = uids;
     }
 
     public static StreamCapture getInstance() {
@@ -84,6 +92,7 @@ public class StreamCapture {
         String role;
         boolean fromLocal;
         boolean isClosed = false;
+        TorTunnel torTunnel;
 
         public TransferThread(InputStream in, OutputStream out, String role){
             this.in = new BufferedInputStream(in,BUFFER_SIZE);
@@ -161,6 +170,12 @@ public class StreamCapture {
         public void run() {
 
             Log.w(TAG, "Starting transfer:" + role + "!");
+
+            if (fromLocal) {
+                torTunnel = new TorTunnel(out);
+                torTunnel.start("127.0.0.1", TorStatusObservable.getSocksProxyPort());
+            }
+
             int r = 0;
             while (r != -1 && !isClosed) {
                 try {
@@ -210,9 +225,14 @@ public class StreamCapture {
                             String firstPackage = packetUtils.getPackageNameFromUID(uid);
                             String msg = "packageID: " + firstPackage + "\nUID: " + uid + "\npacket: " + sourceAddress.toString() + " -> " + destinationAddress.toString();
                             Log.i(TAG, msg);
+                            if (torifiedUids.contains(uid) && protocol == PROTOCOL_TCP) {
+                                Log.i(TAG, "^--- torifying this packet ---^");
+                                //DNS resolution is currently done over OpenVpn!
+                                torTunnel.inputPacket(buffer);
+                                continue;
+                            }
                         }
                         writeThrough(out, buffer, 0, r);
-
                     }
 
                 } catch (Exception e) {
@@ -222,8 +242,12 @@ public class StreamCapture {
                 }
             }
 
-            if (!isClosed)
+            if (!isClosed) {
                 closeIgnoreException();
+                if (torTunnel != null) {
+                    torTunnel.stop();
+                }
+            }
 
             Log.w(TAG, "Terminated transfer:" + role + "!");
         }
