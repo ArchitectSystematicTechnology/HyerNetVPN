@@ -1,5 +1,23 @@
 package se.leap.bitmaskclient.base.utils;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+
+import de.blinkt.openvpn.VpnProfile;
+import se.leap.bitmaskclient.base.models.Provider;
+import se.leap.bitmaskclient.tor.TorStatusObservable;
+
 import static android.content.Context.MODE_PRIVATE;
 import static se.leap.bitmaskclient.base.models.Constants.ALLOW_EXPERIMENTAL_TRANSPORTS;
 import static se.leap.bitmaskclient.base.models.Constants.ALLOW_TETHERING_BLUETOOTH;
@@ -29,6 +47,7 @@ import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_VPN_CERTIFICA
 import static se.leap.bitmaskclient.base.models.Constants.RESTART_ON_UPDATE;
 import static se.leap.bitmaskclient.base.models.Constants.SHARED_PREFERENCES;
 import static se.leap.bitmaskclient.base.models.Constants.SHOW_EXPERIMENTAL;
+import static se.leap.bitmaskclient.base.models.Constants.TOR_VPN_PROXY_MODE;
 import static se.leap.bitmaskclient.base.models.Constants.USE_BRIDGES;
 import static se.leap.bitmaskclient.base.models.Constants.USE_IPv6_FIREWALL;
 import static se.leap.bitmaskclient.base.models.Constants.USE_OBFUSCATION_PINNING;
@@ -268,6 +287,11 @@ public class PreferenceHelper {
 
     public static Boolean getUseSnowflake(Context context) {
         return getBoolean(context, USE_SNOWFLAKE, true);
+    }
+
+    // TODO: implement setter, change condition: if torified uids are persisted
+    public static Boolean isTorInVpnProxyMode(Context context) {
+        return getBoolean(context, TOR_VPN_PROXY_MODE, true);
     }
 
     public static void saveBattery(Context context, boolean isEnabled) {

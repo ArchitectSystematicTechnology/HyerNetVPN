@@ -34,6 +34,7 @@ import org.torproject.jni.TorService;
 
 import se.leap.bitmaskclient.base.FragmentManagerEnhanced;
 import se.leap.bitmaskclient.base.models.Provider;
+import se.leap.bitmaskclient.base.utils.PreferenceHelper;
 import se.leap.bitmaskclient.providersetup.ProviderAPICommand;
 import se.leap.bitmaskclient.providersetup.ProviderApiSetupBroadcastReceiver;
 import se.leap.bitmaskclient.providersetup.ProviderDetailActivity;
@@ -173,7 +174,7 @@ public abstract class ProviderSetupBaseActivity extends ConfigWizardBaseActivity
     }
 
     public void cancelSettingUpProvider(boolean stopTor) {
-        if (stopTor && TorStatusObservable.getStatus() != OFF) {
+        if (stopTor && TorStatusObservable.getStatus() != OFF && !PreferenceHelper.isTorInVpnProxyMode(this)) {
             Log.d(TAG, "SHUTDOWN - cancelSettingUpProvider stopTor:" + stopTor);
             TorServiceCommand.stopTorServiceAsync(this);
         }

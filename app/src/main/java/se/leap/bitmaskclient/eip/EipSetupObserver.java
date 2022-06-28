@@ -206,7 +206,7 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
                 PreferenceHelper.storeProviderInPreferences(preferences, provider);
                 EipCommand.startVPN(appContext, false);
                 EipStatus.getInstance().setUpdatingVpnCert(false);
-                if (TorStatusObservable.isRunning()) {
+                if (shouldStopTor()) {
                     TorServiceCommand.stopTorServiceAsync(appContext);
                 }
                 break;
@@ -221,14 +221,14 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
                 break;
             case INCORRECTLY_UPDATED_INVALID_VPN_CERTIFICATE:
                 EipStatus.getInstance().setUpdatingVpnCert(false);
-                if (TorStatusObservable.isRunning()) {
+                if (shouldStopTor()) {
                     TorServiceCommand.stopTorServiceAsync(appContext);
                 }
                 break;
             case PROVIDER_NOK:
             case INCORRECTLY_DOWNLOADED_EIP_SERVICE:
             case INCORRECTLY_DOWNLOADED_VPN_CERTIFICATE:
-                if (TorStatusObservable.isRunning()) {
+                if (shouldStopTor()) {
                     TorServiceCommand.stopTorServiceAsync(appContext);
                 }
                 Log.d(TAG, "PROVIDER NOK - FETCH FAILED");
@@ -255,6 +255,10 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
         for (EipSetupListener listener : listeners) {
             listener.handleProviderApiEvent(intent);
         }
+    }
+
+    private boolean shouldStopTor() {
+        return TorStatusObservable.isRunning() && !PreferenceHelper.isTorInVpnProxyMode(appContext);
     }
 
     private void maybeStartEipService(Bundle resultData) {
@@ -415,7 +419,7 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
         observedProfileFromVpnStatus = null;
         this.changingGateway.set(changingGateway);
         this.reconnectTry.set(0);
-        if (TorStatusObservable.isRunning()) {
+        if (shouldStopTor()) {
             TorServiceCommand.stopTorServiceAsync(appContext);
         }
     }
