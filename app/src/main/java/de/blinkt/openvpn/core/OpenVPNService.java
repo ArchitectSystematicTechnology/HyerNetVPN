@@ -43,6 +43,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Vector;
+import java.util.concurrent.TimeoutException;
 
 import de.blinkt.openvpn.VpnProfile;
 import de.blinkt.openvpn.core.VpnStatus.ByteCountListener;
@@ -56,6 +57,8 @@ import se.leap.bitmaskclient.eip.VpnNotificationManager;
 import se.leap.bitmaskclient.firewall.FirewallManager;
 import se.leap.bitmaskclient.pluggableTransports.ObfsVpnClient;
 import se.leap.bitmaskclient.pluggableTransports.ShapeshifterClient;
+import se.leap.bitmaskclient.tor.TorServiceCommand;
+import se.leap.bitmaskclient.tor.TorStatusObservable;
 
 
 public class OpenVPNService extends VpnService implements StateListener, Callback, ByteCountListener, IOpenVPNServiceInternal, VpnNotificationManager.VpnServiceCallback {
@@ -249,6 +252,7 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
                         obfsVpnClient.stop();
                         obfsVpnClient = null;
                     }
+                    TorServiceCommand.stopTorService(this);
                     VpnStatus.updateStateString("NOPROCESS", "VPN STOPPED", R.string.state_noprocess, ConnectionStatus.LEVEL_NOTCONNECTED);
                 }
                 return true;
@@ -432,6 +436,8 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
             }
         }
 
+        startTorService();
+
         // Start a new session by creating a new thread.
         boolean useOpenVPN3 = VpnProfile.doUseOpenVPN3(this);
 
@@ -477,6 +483,20 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
         );
     }
 
+    private void startTorService() {
+        try {
+            TorServiceCommand.startTorService(this, null);
+            TorStatusObservable.waitForTorCircuits();
+            if (TorStatusObservable.isCancelled()) {
+                throw new InterruptedException("Cancelled Tor setup.");
+            }
+            int httpProxyPort = TorServiceCommand.getHttpTunnelPort(this);
+            int socksProxyPort = TorServiceCommand.getSocksTunnelPort(this);
+            TorStatusObservable.setProxyPorts(httpProxyPort, socksProxyPort);
+        } catch (InterruptedException | TimeoutException e) {
+            e.printStackTrace();
+        }
+    }
     private void stopOldOpenVPNProcess() {
         Log.d(TAG, "stopOldVPNProcess");
         if (mManagement != null) {
