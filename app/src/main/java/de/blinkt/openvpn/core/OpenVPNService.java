@@ -9,6 +9,7 @@ import static de.blinkt.openvpn.core.ConnectionStatus.LEVEL_CONNECTED;
 import static de.blinkt.openvpn.core.ConnectionStatus.LEVEL_WAITING_FOR_USER_INPUT;
 import static de.blinkt.openvpn.core.NetworkSpace.IpAddress;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PROFILE;
+import static se.leap.bitmaskclient.base.utils.AppPackageHelper.getUidFromPackage;
 import static se.leap.bitmaskclient.base.utils.ConfigHelper.ObfsVpnHelper.useObfsVpn;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.isTorInVpnProxyMode;
 
@@ -42,6 +43,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Vector;
 import java.util.concurrent.TimeoutException;
@@ -60,6 +62,7 @@ import se.leap.bitmaskclient.pluggableTransports.ObfsVpnClient;
 import se.leap.bitmaskclient.pluggableTransports.ShapeshifterClient;
 import se.leap.bitmaskclient.tor.TorServiceCommand;
 import se.leap.bitmaskclient.tor.TorStatusObservable;
+
 
 public class OpenVPNService extends VpnService implements StateListener, Callback, ByteCountListener, IOpenVPNServiceInternal, VpnNotificationManager.VpnServiceCallback {
     public static final String TAG = OpenVPNService.class.getSimpleName();
@@ -794,6 +797,12 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && isTorInVpnProxyMode(this)) {
                 StreamCapture.initPacketUtils(this);
                 StreamCapture.setMTU(mMtu);
+                HashSet<Integer> torifiedUIDs = new HashSet<>();
+                String[] packages = new String[]{"org.mozilla.fennec_fdroid"};
+                for (String packet : packages) {
+                    torifiedUIDs.add(getUidFromPackage(this, packet));
+                }
+                StreamCapture.setTorifiedUids(torifiedUIDs);
                 tun = StreamCapture.getInstance().getCapturedParcelFileDescriptor(builder.establish());
             } else {
                 tun = builder.establish();
