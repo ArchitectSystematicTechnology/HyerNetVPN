@@ -1,9 +1,6 @@
 package se.leap.bitmaskclient.capture;
 
-import static se.leap.bitmaskclient.capture.PacketUtils.PROTOCOL_ICMP;
-import static se.leap.bitmaskclient.capture.PacketUtils.PROTOCOL_IPV6_HOPOPT;
 import static se.leap.bitmaskclient.capture.PacketUtils.PROTOCOL_TCP;
-import static se.leap.bitmaskclient.capture.PacketUtils.PROTOCOL_UDP;
 
 import android.content.Context;
 import android.os.Build;
@@ -25,7 +22,6 @@ import java.util.HashSet;
 
 import se.leap.bitmaskclient.capture.ip.IPPacket;
 import se.leap.bitmaskclient.capture.ip.TCPPacket;
-import se.leap.bitmaskclient.capture.ip.UDPPacket;
 import se.leap.bitmaskclient.tor.TorStatusObservable;
 import se.leap.bitmaskclient.tor.TorTunnel;
 
@@ -191,30 +187,11 @@ public class StreamCapture {
                         int protocol = buffer[9]&0XFF;
                         InetSocketAddress sourceAddress = null;
                         InetSocketAddress destinationAddress = null;
-                        switch (protocol) {
-                            case PROTOCOL_TCP:
-                                TCPPacket tcpPacket = new TCPPacket(buffer, 0, r);
-                                sourceAddress = new InetSocketAddress(IPPacket.int2ip(tcpPacket.getSourceIP()), tcpPacket.getSourcePort());
-                                destinationAddress = new InetSocketAddress(IPPacket.int2ip(tcpPacket.getDestIP()), tcpPacket.getDestPort());
-                                break;
-                            case PROTOCOL_UDP:
-                                UDPPacket udpPacket = new UDPPacket(buffer, 0, r);
-                                sourceAddress = new InetSocketAddress(IPPacket.int2ip(udpPacket.getSourceIP()), udpPacket.getSourcePort());
-                                destinationAddress = new InetSocketAddress(IPPacket.int2ip(udpPacket.getDestIP()), udpPacket.getDestPort());
-                                break;
-                            case PROTOCOL_IPV6_HOPOPT:
-                                IPPacket ipPacket = new IPPacket(buffer, 0, r);
-                                Log.w(TAG, "unhandled protocol: HOPOPT: " + IPPacket.int2ip(ipPacket.getSourceIP()) + " -> " + IPPacket.int2ip(ipPacket.getDestIP()));
-                                break;
-                            case PROTOCOL_ICMP:
-                                IPPacket icmpPacket = new IPPacket(buffer, 0, r);
-                                Log.w(TAG, "unhandled protocol: ICMP: " + IPPacket.int2ip(icmpPacket.getSourceIP()) + " -> " + IPPacket.int2ip(icmpPacket.getDestIP()));
-                                break;
-                            default:
-                                Log.w(TAG, "unhandled protocol: " + protocol);
-                                break;
-                        }
-                        if (sourceAddress != null) {
+                        if (protocol == PROTOCOL_TCP) {
+                            TCPPacket tcpPacket = new TCPPacket(buffer, 0, r);
+                            sourceAddress = new InetSocketAddress(IPPacket.int2ip(tcpPacket.getSourceIP()), tcpPacket.getSourcePort());
+                            destinationAddress = new InetSocketAddress(IPPacket.int2ip(tcpPacket.getDestIP()), tcpPacket.getDestPort());
+
                             int uid = packetUtils.getUIDFrom(protocol, version, sourceAddress, destinationAddress);
                             // TODO: implement support for IPv6
                             if (torifiedUids.contains(uid) && version == 4) {
