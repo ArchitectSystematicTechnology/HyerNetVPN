@@ -18,9 +18,12 @@ public class TorTunnel {
         }
 
         @Override
-        public void writePacket(byte[] bytes) {
+        public void writePacket(byte[] buffer) {
             try {
-                tunOutputStream.get().write(bytes);
+                OutputStream out = tunOutputStream.get();
+                synchronized(out){
+                    out.write(buffer);
+                }
             } catch (NullPointerException | IOException e) {
                 e.printStackTrace();
             }

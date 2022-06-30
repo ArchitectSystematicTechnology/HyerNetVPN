@@ -63,21 +63,15 @@ public class StreamCapture {
         MTU = mtu;
     }
 
-   /* public static void setLocalIP(String mIp)  {
-        try {
-            LOCAL_IP = IPPacket.ip2int(InetAddress.getByName(mIp));
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            LogObservable.getInstance().addLog("ERROR: failed to set local IP.");
-        }
-    } */
-
     private ParcelFileDescriptor remote = null;
     private ParcelFileDescriptor remote_stub = null;
     private ParcelFileDescriptor captured_fd = null;
     private FileInputStream remote_in = null;
     private FileOutputStream remote_out = null;
     private FileInputStream local_in = null;
+    // TODO: check the current approach for thread safety:
+    // we currently only put a synchronized block around local_out to write to it
+    // it appears to be working but it's unclear to me if it can result on collisions
     private FileOutputStream local_out = null;
 
     private boolean closed = true;
