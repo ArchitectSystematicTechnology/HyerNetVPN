@@ -11,6 +11,7 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import java.io.BufferedInputStream;
@@ -87,11 +88,11 @@ public class StreamCapture {
         boolean fromLocal;
         boolean isClosed = false;
         TorTunnel torTunnel;
-
-        public TransferThread(InputStream in, OutputStream out, String role){
+        public TransferThread(InputStream in, OutputStream out, @Nullable TorTunnel torTunnel, String role){
             this.in = new BufferedInputStream(in,BUFFER_SIZE);
             this.out = out;
             this.role = role;
+            this.torTunnel = torTunnel;
             fromLocal = role.equals(local_TO_remote);
             new Thread(this).start();
         }
@@ -165,8 +166,7 @@ public class StreamCapture {
 
             Log.w(TAG, "Starting transfer:" + role + "!");
 
-            if (fromLocal) {
-                torTunnel = new TorTunnel(out);
+            if (fromLocal && torTunnel != null) {
                 torTunnel.start("127.0.0.1", TorStatusObservable.getSocksProxyPort());
             }
 
@@ -216,12 +216,13 @@ public class StreamCapture {
                         }
                         if (sourceAddress != null) {
                             int uid = packetUtils.getUIDFrom(protocol, version, sourceAddress, destinationAddress);
-                            String firstPackage = packetUtils.getPackageNameFromUID(uid);
-                            String msg = "packageID: " + firstPackage + "\nUID: " + uid + "\npacket: " + sourceAddress.toString() + " -> " + destinationAddress.toString();
-                            Log.i(TAG, msg);
-                            if (torifiedUids.contains(uid) && protocol == PROTOCOL_TCP) {
-                                Log.i(TAG, "^--- torifying this packet ---^");
-                                //DNS resolution is currently done over OpenVpn!
+                            // TODO: implement support for IPv6
+                            if (torifiedUids.contains(uid) && version == 4) {
+                                // DNS resolution is currently done over the VPN providers DNS server, so we
+                                // only need to forward TCP packets
+                                String firstPackage = packetUtils.getPackageNameFromUID(uid);
+                                String msg = "packageID: " + firstPackage + " UID: " + uid + " packet: " + sourceAddress + " -> " + destinationAddress;
+                                Log.i(TAG, "tor >> " + msg);
                                 torTunnel.inputPacket(buffer);
                                 continue;
                             }
@@ -305,8 +306,8 @@ public class StreamCapture {
         remote = pair[1];
         remote_out =new FileOutputStream(remote_stub.getFileDescriptor());
         remote_in = new FileInputStream(remote_stub.getFileDescriptor());
-        from_local = new TransferThread(local_in, remote_out, local_TO_remote);
-        from_remote = new TransferThread(remote_in, local_out, remote_TO_local);
+        from_local = new TransferThread(local_in, remote_out, new TorTunnel(local_out), local_TO_remote);
+        from_remote = new TransferThread(remote_in, local_out, null, remote_TO_local);
         return remote;
     }
 }
