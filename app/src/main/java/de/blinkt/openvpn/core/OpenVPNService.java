@@ -10,6 +10,7 @@ import static de.blinkt.openvpn.core.ConnectionStatus.LEVEL_WAITING_FOR_USER_INP
 import static de.blinkt.openvpn.core.NetworkSpace.IpAddress;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PROFILE;
 import static se.leap.bitmaskclient.base.utils.ConfigHelper.ObfsVpnHelper.useObfsVpn;
+import static se.leap.bitmaskclient.base.utils.PreferenceHelper.isTorInVpnProxyMode;
 
 import android.Manifest.permission;
 import android.annotation.TargetApi;
@@ -59,7 +60,6 @@ import se.leap.bitmaskclient.pluggableTransports.ObfsVpnClient;
 import se.leap.bitmaskclient.pluggableTransports.ShapeshifterClient;
 import se.leap.bitmaskclient.tor.TorServiceCommand;
 import se.leap.bitmaskclient.tor.TorStatusObservable;
-
 
 public class OpenVPNService extends VpnService implements StateListener, Callback, ByteCountListener, IOpenVPNServiceInternal, VpnNotificationManager.VpnServiceCallback {
     public static final String TAG = OpenVPNService.class.getSimpleName();
@@ -437,7 +437,9 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
             }
         }
 
-        startTorService();
+        if (isTorInVpnProxyMode(this)) {
+            startTorService();
+        }
 
         // Start a new session by creating a new thread.
         boolean useOpenVPN3 = VpnProfile.doUseOpenVPN3(this);
@@ -789,8 +791,8 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
         try {
             //Debug.stopMethodTracing();
             ParcelFileDescriptor tun;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                StreamCapture.initPacketUtils(getApplicationContext());
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT && isTorInVpnProxyMode(this)) {
+                StreamCapture.initPacketUtils(this);
                 StreamCapture.setMTU(mMtu);
                 tun = StreamCapture.getInstance().getCapturedParcelFileDescriptor(builder.establish());
             } else {

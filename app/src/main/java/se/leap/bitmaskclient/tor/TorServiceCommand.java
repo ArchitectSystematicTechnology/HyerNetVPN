@@ -147,7 +147,7 @@ public class TorServiceCommand {
 
     private static TorServiceConnection initTorServiceConnection(Context context) throws InterruptedException, IllegalStateException {
         Log.d(TAG, "initTorServiceConnection");
-        if (PreferenceHelper.getUseSnowflake(context)) {
+        if (PreferenceHelper.getUseSnowflake(context) || PreferenceHelper.isTorInVpnProxyMode(context)) {
             Log.d(TAG, "serviceConnection is still null");
             if (!TorService.hasClientTransportPlugin()) {
                 TorService.setClientTransportPlugin(new ClientTransportPlugin(context.getApplicationContext()));
