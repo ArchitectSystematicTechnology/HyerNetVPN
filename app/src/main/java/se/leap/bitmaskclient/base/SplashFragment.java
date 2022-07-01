@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.databinding.FragmentSplashBinding;
 
 public class SplashFragment extends Fragment {
     public SplashFragment() {
@@ -19,6 +20,14 @@ public class SplashFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_splash, container, false);
+        FragmentSplashBinding mBinding = FragmentSplashBinding.inflate(inflater, container, false);
+        mBinding.ivAction.setOnClickListener(v -> {
+            if (getActivity() != null && getActivity() instanceof StartActivity) {
+                StartActivity startActivity = (StartActivity) getActivity();
+                startActivity.prepareEIP();
+            }
+        });
+
+        return mBinding.getRoot();
     }
 }

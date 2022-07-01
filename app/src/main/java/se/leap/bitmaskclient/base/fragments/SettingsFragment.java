@@ -85,6 +85,7 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         initPreferUDPEntry(view);
         initUseBridgesEntry(view);
         initUseSnowflakeEntry(view);
+        initTorRoutedAppsEntry(view);
         initFirewallEntry(view);
         initTetheringEntry(view);
         initGatewayPinningEntry(view);
@@ -189,12 +190,36 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         }
     }
 
+    private void initTorRoutedAppsEntry(View rootView) {
+        IconTextEntry excludeApps = rootView.findViewById(R.id.route_via_tor);
+        excludeApps.setVisibility(VISIBLE);
+        Set<String> apps = PreferenceHelper.getTorRoutedApps(this.getContext());
+        if (apps != null) {
+            updateTorRoutedAppsSubtitle(excludeApps, apps.size());
+        }
+        FragmentManagerEnhanced fragmentManager = new FragmentManagerEnhanced(getActivity().getSupportFragmentManager());
+        excludeApps.setOnClickListener((buttonView) -> {
+            Fragment fragment = new TorRouteAppsSelectorFragment();
+            fragmentManager.replace(R.id.main_container, fragment, MainActivity.TAG);
+        });
+
+    }
+
     private void updateExcludeAppsSubtitle(IconTextEntry excludeApps, int number) {
         if (number > 0) {
             excludeApps.setSubtitle(getContext().getResources().getQuantityString(R.plurals.subtitle_exclude_apps, number, number));
             excludeApps.setSubtitleColor(R.color.colorError);
         } else {
             excludeApps.hideSubtitle();
+        }
+    }
+
+    private void updateTorRoutedAppsSubtitle(IconTextEntry torRoutedApps, int number) {
+        if (number > 0) {
+            torRoutedApps.setSubtitle(getContext().getResources().getQuantityString(R.plurals.subtitle_tor_routed_apps, number, number));
+            torRoutedApps.setSubtitleColor(R.color.colorError);
+        } else {
+            torRoutedApps.hideSubtitle();
         }
     }
 
@@ -244,7 +269,7 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         gatewayPinning.setOnClickListener(v -> {
             EditText gatewayPinningEditText = new EditText(rootView.getContext());
             gatewayPinningEditText.setText(pinnedGateway);
-                new AlertDialog.Builder(context)
+            new AlertDialog.Builder(context)
                     .setTitle("Gateway Pinning")
                     .setMessage("Enter the domain name of the gateway")
                     .setView(gatewayPinningEditText)
@@ -352,7 +377,7 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         View rootView = getView();
-        if (rootView == null)  {
+        if (rootView == null) {
             return;
         }
         if (key.equals(USE_BRIDGES) || key.equals(PREFER_UDP)) {

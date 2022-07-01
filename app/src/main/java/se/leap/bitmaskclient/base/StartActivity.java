@@ -61,7 +61,6 @@ import se.leap.bitmaskclient.providersetup.activities.CustomProviderSetupActivit
 /**
  * Activity shown at startup. Evaluates if App is started for the first time or has been upgraded
  * and acts and calls another activity accordingly.
- *
  */
 public class StartActivity extends AppCompatActivity {
     public static final String TAG = StartActivity.class.getSimpleName();
@@ -120,8 +119,9 @@ public class StartActivity extends AppCompatActivity {
     }
 
     /**
-     *  check if normal start, first run, up or downgrade
-     *  @return @StartupMode
+     * check if normal start, first run, up or downgrade
+     *
+     * @return @StartupMode
      */
     @StartupMode
     private int checkAppStart() {
@@ -136,7 +136,7 @@ public class StartActivity extends AppCompatActivity {
             }
 
             // no previous app version -> first start
-            if (previousVersionCode == -1 ) {
+            if (previousVersionCode == -1) {
                 Log.d(TAG, "FIRST START");
                 return FIRST;
             }
@@ -203,6 +203,7 @@ public class StartActivity extends AppCompatActivity {
 
     /**
      * check if an upgrade passed or moved to given milestone
+     *
      * @param featureVersionCode Version code of the Milestone FeatureVersionCode.MILE_STONE
      * @return true if milestone is reached - false otherwise
      */
@@ -214,6 +215,7 @@ public class StartActivity extends AppCompatActivity {
         preferences.edit().putInt(PREFERENCES_APP_VERSION, versionCode).apply();
     }
 
+<<<<<<< HEAD
     private void prepareEIP() {
         Provider provider =  ProviderObservable.getInstance().getCurrentProvider();
         if (provider.isConfigured()) {
@@ -227,6 +229,14 @@ public class StartActivity extends AppCompatActivity {
                 EipCommand.startVPN(this, false);
                 showNextActivity(provider);
                 finish();
+=======
+    void prepareEIP() {
+        boolean providerExists = ProviderObservable.getInstance().getCurrentProvider() != null;
+        if (providerExists) {
+            Provider provider = ProviderObservable.getInstance().getCurrentProvider();
+            if (!provider.isConfigured()) {
+                configureLeapProvider();
+>>>>>>> added
             } else {
                 showNextActivity(provider);
             }

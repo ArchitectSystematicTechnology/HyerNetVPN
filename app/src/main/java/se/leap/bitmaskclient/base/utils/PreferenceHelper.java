@@ -1,23 +1,5 @@
 package se.leap.bitmaskclient.base.utils;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
-
-import de.blinkt.openvpn.VpnProfile;
-import se.leap.bitmaskclient.base.models.Provider;
-import se.leap.bitmaskclient.tor.TorStatusObservable;
-
 import static android.content.Context.MODE_PRIVATE;
 import static se.leap.bitmaskclient.base.models.Constants.ALLOW_EXPERIMENTAL_TRANSPORTS;
 import static se.leap.bitmaskclient.base.models.Constants.ALLOW_TETHERING_BLUETOOTH;
@@ -48,6 +30,7 @@ import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_VPN_CERTIFICA
 import static se.leap.bitmaskclient.base.models.Constants.RESTART_ON_UPDATE;
 import static se.leap.bitmaskclient.base.models.Constants.SHARED_PREFERENCES;
 import static se.leap.bitmaskclient.base.models.Constants.SHOW_EXPERIMENTAL;
+import static se.leap.bitmaskclient.base.models.Constants.TOR_ROUTED_APPS;
 import static se.leap.bitmaskclient.base.models.Constants.TOR_VPN_PROXY_MODE;
 import static se.leap.bitmaskclient.base.models.Constants.USE_BRIDGES;
 import static se.leap.bitmaskclient.base.models.Constants.USE_IPv6_FIREWALL;
@@ -445,6 +428,22 @@ public class PreferenceHelper {
         }
         SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         return preferences.getStringSet(EXCLUDED_APPS, new HashSet<>());
+    }
+
+
+    public static void setTorRoutedApps(Context context, Set<String> apps) {
+        SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
+        SharedPreferences.Editor prefsedit = prefs.edit();
+        prefsedit.putStringSet(TOR_ROUTED_APPS, apps);
+        prefsedit.apply();
+    }
+
+    public static Set<String> getTorRoutedApps(Context context) {
+        if (context == null) {
+            return null;
+        }
+        SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
+        return preferences.getStringSet(TOR_ROUTED_APPS, new HashSet<>());
     }
 
     public static long getLong(Context context, String key, long defValue) {

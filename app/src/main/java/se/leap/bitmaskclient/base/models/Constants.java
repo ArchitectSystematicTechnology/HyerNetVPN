@@ -53,6 +53,7 @@ public interface Constants {
     String OBFUSCATION_PINNING_LOCATION = "obfuscation_pinning_location";
     String TOR_VPN_PROXY_MODE = "tor_vpn_proxy_mode";
     String IS_SPLASH_SHOWN = "is_splash_shown";
+    String TOR_ROUTED_APPS = "tor_routed_apps";
 
     //////////////////////////////////////////////
     // REQUEST CODE CONSTANTS
