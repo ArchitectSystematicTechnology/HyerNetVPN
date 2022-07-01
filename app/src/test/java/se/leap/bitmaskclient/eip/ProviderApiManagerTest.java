@@ -151,6 +151,11 @@ public class ProviderApiManagerTest {
         }
 
         @Override
+        public int getTorSocksTunnelPort() {
+            return 0;
+        }
+
+        @Override
         public boolean hasNetworkConnection() {
             return hasNetworkConnection;
         }
