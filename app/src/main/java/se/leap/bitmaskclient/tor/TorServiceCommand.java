@@ -72,10 +72,7 @@ public class TorServiceCommand {
             e.printStackTrace();
         }
 
-        if (torServiceConnection != null) {
-            torServiceConnection.close();
-        }
-
+        torServiceConnection.close();
         return startedForeground;
     }
 
