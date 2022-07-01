@@ -38,6 +38,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.base.utils.PreferenceHelper;
 
 public class TorStatusObservable extends Observable {
 
@@ -146,7 +147,7 @@ public class TorStatusObservable extends Observable {
         addLog(message);
         getInstance().lastSnowflakeLog = message;
         if (getInstance().status != TorStatus.OFF) {
-            getInstance().torNotificationManager.buildTorNotification(context, getStringForCurrentStatus(context), getNotificationLog(), getBootstrapProgress());
+            getInstance().torNotificationManager.buildTorNotification(context, getStringForCurrentStatus(context), getNotificationLog(context), getBootstrapProgress(), false);
         }
         //TODO: implement proper state signalling in IPtProxy
         message = message.trim();
@@ -185,15 +186,18 @@ public class TorStatusObservable extends Observable {
         instance.notifyObservers();
     }
 
-    private static String getNotificationLog() {
-        String snowflakeIcon = new String(Character.toChars(0x2744));
-        String snowflakeLog = getInstance().lastSnowflakeLog;
-        // we don't want to show the response json in the notification
-        if (snowflakeLog != null && snowflakeLog.contains("Received answer: {")) {
-            snowflakeLog = "Received Answer.";
+    private static String getNotificationLog(Context context) {
+        String notificationLog = "Tor: " + getInstance().lastTorLog;
+        if (PreferenceHelper.getUseSnowflake(context)) {
+            String snowflakeIcon = new String(Character.toChars(0x2744));
+            String snowflakeLog = getInstance().lastSnowflakeLog;
+            // we don't want to show the response json in the notification
+            if (snowflakeLog != null && snowflakeLog.contains("Received answer: {")) {
+                snowflakeLog = "Received Answer.";
+            }
+            notificationLog += "\n" + snowflakeIcon + ": " + snowflakeLog;
         }
-        return "Tor: " + getInstance().lastTorLog + "\n" +
-                snowflakeIcon + ": " + snowflakeLog;
+        return notificationLog;
     }
 
     public static int getBootstrapProgress() {
@@ -227,7 +231,9 @@ public class TorStatusObservable extends Observable {
                     getInstance().lastTorLog = getStringFor(context, logKey);
                     addLog(getInstance().lastTorLog);
                 }
-                getInstance().torNotificationManager.buildTorNotification(context, getStringForCurrentStatus(context), getNotificationLog(), getBootstrapProgress());
+                // after bootstrapping was successful, TorService sends and status ON update without any bootstrapping or logKey value
+                boolean forceShowingAfterBootstrapping = getInstance().status == ON && bootstrapPercent == -1 && logKey == null;
+                getInstance().torNotificationManager.buildTorNotification(context, getStringForCurrentStatus(context), getNotificationLog(context), getBootstrapProgress(), forceShowingAfterBootstrapping);
             }
 
             instance.setChanged();

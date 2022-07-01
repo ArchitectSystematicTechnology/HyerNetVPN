@@ -50,8 +50,8 @@ public class TorNotificationManager {
                 .setContentText(context.getString(R.string.tor_started)).build();
     }
 
-    public void buildTorNotification(Context context, String state, String message, int progress) {
-        if (shouldDropNotification()) {
+    public void buildTorNotification(Context context, String state, String message, int progress, boolean forceShowing) {
+        if (shouldDropNotification() && !forceShowing) {
             return;
         }
         NotificationManager notificationManager = initNotificationManager(context);
