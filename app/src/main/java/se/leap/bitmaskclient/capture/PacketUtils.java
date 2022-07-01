@@ -126,7 +126,6 @@ public class PacketUtils {
 
                     String remoteAddress = convertHexToIP(remoteAddressParts[0]);
                     int remoteAddressPort = Integer.parseInt(remoteAddressParts[1], 16);
-                    Log.i(TAG, address + ":" + port + " vs " + source.getAddress().getHostAddress() + ":" + source.getPort() + " and " + remoteAddress + ":" + remoteAddressPort + " vs " + destination.getAddress().getHostAddress() + ":" + destination.getPort());
 
                     if (remoteAddressPort == destination.getPort() && remoteAddress.equals(destination.getAddress().getHostAddress())) {
                         uid = Integer.parseInt(parts[INDEX_UID_COL]);
