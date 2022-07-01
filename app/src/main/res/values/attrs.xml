@@ -10,6 +10,9 @@
     <attr name="subtitle" format="string|reference"/>
     <attr name="singleLine" format="boolean"/>
     <attr name="tint" format="reference|color" />
+    <attr name="enabled" format="boolean" />
+
+
     <declare-styleable name="IconSwitchEntry">
         <attr name="text"/>
         <attr name="subtitle" />
@@ -25,5 +28,9 @@
     </declare-styleable>
     <declare-styleable name="LocationIndicator">
         <attr name="tint"/>
+    </declare-styleable>
+
+    <declare-styleable name="SimpleCheckBox">
+        <attr name="enabled"/>
     </declare-styleable>
 </resources>

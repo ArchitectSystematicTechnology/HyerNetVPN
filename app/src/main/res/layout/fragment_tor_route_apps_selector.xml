@@ -7,6 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/white"
     android:orientation="vertical"
     tools:ignore="RtlCompat">
 
@@ -18,7 +19,7 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingEnd="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
-        android:text="@string/warning_exclude_apps_message"
+        android:text="@string/tor_anonymizer_info"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@color/colorWarning"
         android:textStyle="bold" />
@@ -26,6 +27,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginTop="8dp"
         android:background="?android:attr/listDivider" />
 
     <EditText
@@ -36,16 +38,15 @@
         android:drawableStart="@drawable/ic_search"
         android:drawablePadding="8dp"
         android:ems="10"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
         android:hint="@string/search_app"
         android:inputType="textPersonName"
         android:imeOptions="actionDone"
-        android:padding="8dp" />
+        android:padding="12dp" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginBottom="8dp"
         android:background="?android:attr/listDivider" />
 
     <ListView
