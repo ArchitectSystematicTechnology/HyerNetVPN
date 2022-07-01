@@ -50,7 +50,7 @@ public class TorNotificationManager {
                 .setContentText(context.getString(R.string.tor_started)).build();
     }
 
-    public void buildTorNotification(Context context, String state, String message, int progress, boolean forceShowing) {
+    public void buildTorNotification(Context context, boolean forceShowing) {
         if (shouldDropNotification() && !forceShowing) {
             return;
         }
@@ -58,17 +58,20 @@ public class TorNotificationManager {
         if (notificationManager == null) {
             return;
         }
+        String torStatusText = TorStatusObservable.getStringForCurrentStatus(context);
+        String torStatusLog = TorStatusObservable.getNotificationLog(context);
+        int progress = TorStatusObservable.getBootstrapProgress();
         NotificationCompat.Builder notificationBuilder = initNotificationBuilderDefaults(context);
         notificationBuilder
                 .setSmallIcon(R.drawable.ic_bridge_36)
                 .setWhen(System.currentTimeMillis())
                 .setStyle(new NotificationCompat.BigTextStyle().
-                        setBigContentTitle(state).
-                        bigText(message))
-                .setTicker(message)
-                .setContentTitle(state)
+                        setBigContentTitle(torStatusText).
+                        bigText(torStatusLog))
+                .setTicker(torStatusLog)
+                .setContentTitle(torStatusText)
                 .setOnlyAlertOnce(true)
-                .setContentText(message);
+                .setContentText(torStatusLog);
         if (progress > 0) {
             notificationBuilder.setProgress(100, progress, false);
         }

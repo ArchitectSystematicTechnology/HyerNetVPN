@@ -147,7 +147,7 @@ public class TorStatusObservable extends Observable {
         addLog(message);
         getInstance().lastSnowflakeLog = message;
         if (getInstance().status != TorStatus.OFF) {
-            getInstance().torNotificationManager.buildTorNotification(context, getStringForCurrentStatus(context), getNotificationLog(context), getBootstrapProgress(), false);
+            getInstance().torNotificationManager.buildTorNotification(context, false);
         }
         //TODO: implement proper state signalling in IPtProxy
         message = message.trim();
@@ -186,7 +186,7 @@ public class TorStatusObservable extends Observable {
         instance.notifyObservers();
     }
 
-    private static String getNotificationLog(Context context) {
+    public static String getNotificationLog(Context context) {
         String notificationLog = "Tor: " + getInstance().lastTorLog;
         if (PreferenceHelper.getUseSnowflake(context)) {
             String snowflakeIcon = new String(Character.toChars(0x2744));
@@ -233,7 +233,7 @@ public class TorStatusObservable extends Observable {
                 }
                 // after bootstrapping was successful, TorService sends and status ON update without any bootstrapping or logKey value
                 boolean forceShowingAfterBootstrapping = getInstance().status == ON && bootstrapPercent == -1 && logKey == null;
-                getInstance().torNotificationManager.buildTorNotification(context, getStringForCurrentStatus(context), getNotificationLog(context), getBootstrapProgress(), forceShowingAfterBootstrapping);
+                getInstance().torNotificationManager.buildTorNotification(context, forceShowingAfterBootstrapping);
             }
 
             instance.setChanged();
