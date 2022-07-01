@@ -149,7 +149,7 @@ public class TorServiceCommand {
         Log.d(TAG, "initTorServiceConnection");
         if (PreferenceHelper.getUseSnowflake(context) || PreferenceHelper.isTorInVpnProxyMode(context)) {
             Log.d(TAG, "serviceConnection is still null");
-            if (!TorService.hasClientTransportPlugin()) {
+            if (PreferenceHelper.getUseSnowflake(context) && !TorService.hasClientTransportPlugin()) {
                 TorService.setClientTransportPlugin(new ClientTransportPlugin(context.getApplicationContext()));
             }
             return new TorServiceConnection(context);
