@@ -213,5 +213,11 @@
   <string name="title_dnsdaemon">DNS Deamon</string>
   <string name="title_nobody">Nobody</string>
   <string name="unknown">Unknown</string>
+  <string name="splash_info_1">Bitmask is 100% open source and will\nonly route your traffic through\ntrusted service providers. </string>
+  <string name="splash_info_2">For places where internet is censored\nuse the censorship circumvention\noptions in “Advanced Settings”.</string>
+  <string name="splash_info_3">To anonymize your traffic using Tor go\nto “Advanced Settings.” </string>
+  <string name="anonymization">Anonymization</string>
+  <string name="route_via_tor">Select apps to use Tor instead of CalyxVPN</string>
+  <string name="tor_anonymizer_info">Choose which apps you want anonymized using Tor. Selected apps will be routed over Tor, not CalyxVPN. You can not select previously excluded apps.</string>
 
 </resources>

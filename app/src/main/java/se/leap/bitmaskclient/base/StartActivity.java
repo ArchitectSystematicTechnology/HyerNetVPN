@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2018 LEAP Encryption Access Project and contributers
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -29,7 +29,6 @@ import static se.leap.bitmaskclient.base.models.Constants.SHARED_PREFERENCES;
 import static se.leap.bitmaskclient.base.utils.ConfigHelper.isDefaultBitmask;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.storeProviderInPreferences;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -38,6 +37,7 @@ import android.util.Log;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -63,12 +63,14 @@ import se.leap.bitmaskclient.providersetup.activities.CustomProviderSetupActivit
  * and acts and calls another activity accordingly.
  *
  */
-public class StartActivity extends Activity{
+public class StartActivity extends AppCompatActivity {
     public static final String TAG = StartActivity.class.getSimpleName();
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({FIRST, NORMAL, UPGRADE})
-    private @interface StartupMode {}
+    private @interface StartupMode {
+    }
+
     private static final int FIRST = 0;
     private static final int NORMAL = 1;
     private static final int UPGRADE = 2;
@@ -103,7 +105,17 @@ public class StartActivity extends Activity{
         // initialize app necessities
         VpnStatus.initLogCache(getApplicationContext().getCacheDir());
 
-        prepareEIP();
+        //show splash here
+        if (PreferenceHelper.getSplashScreenShown(getApplicationContext())) {
+            prepareEIP();
+
+        } else {
+            PreferenceHelper.setSplashScreenShown(getApplicationContext());
+            SplashFragment fragment = new SplashFragment();
+            new FragmentManagerEnhanced(getSupportFragmentManager())
+                    .replace(android.R.id.content, fragment, MainActivity.TAG);
+        }
+
 
     }
 
@@ -236,7 +248,7 @@ public class StartActivity extends Activity{
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_CONFIGURE_LEAP) {
             if (resultCode == RESULT_OK && data != null && data.hasExtra(Provider.KEY)) {
                 Provider provider = data.getParcelableExtra(Provider.KEY);

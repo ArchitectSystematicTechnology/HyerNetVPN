@@ -27,6 +27,7 @@ import static se.leap.bitmaskclient.base.models.Constants.ALWAYS_ON_SHOW_DIALOG;
 import static se.leap.bitmaskclient.base.models.Constants.DEFAULT_SHARED_PREFS_BATTERY_SAVER;
 import static se.leap.bitmaskclient.base.models.Constants.EXCLUDED_APPS;
 import static se.leap.bitmaskclient.base.models.Constants.GATEWAY_PINNING;
+import static se.leap.bitmaskclient.base.models.Constants.IS_SPLASH_SHOWN;
 import static se.leap.bitmaskclient.base.models.Constants.LAST_UPDATE_CHECK;
 import static se.leap.bitmaskclient.base.models.Constants.LAST_USED_PROFILE;
 import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_CERT;
@@ -520,5 +521,17 @@ public class PreferenceHelper {
 
         SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         return preferences.contains(key);
+    }
+
+    public static void setSplashScreenShown(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
+        prefs.edit()
+                .putBoolean(IS_SPLASH_SHOWN, true)
+                .apply();
+    }
+
+    public static boolean getSplashScreenShown(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
+        return preferences.getBoolean(IS_SPLASH_SHOWN, false);
     }
 }

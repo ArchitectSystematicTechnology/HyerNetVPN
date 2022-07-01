@@ -80,4 +80,6 @@
     <!-- default action bar colors used in other fragments than EipFragment -->
     <color name="colorActionBarTitleFont">@color/white</color>
     <color name="colorActionBarSubtitleFont">@color/black800</color>
+
+    <color name="tor_route_search_app_edit_bg">#FBFBFB</color>
 </resources>

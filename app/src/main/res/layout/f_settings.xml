@@ -2,6 +2,7 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
@@ -72,10 +73,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:icon="@drawable/ic_snowflake"
-            app:text="@string/use_snowflake"
-            app:subtitle="@string/snowflake_description"
             app:singleLine="false"
-            android:visibility="gone"
+            app:subtitle="@string/snowflake_description"
+            app:text="@string/use_snowflake"
+
+            tools:visibility="gone" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/anonymization_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:text="@string/anonymization"
+            android:paddingTop="@dimen/activity_margin"
+            />
+
+        <se.leap.bitmaskclient.base.views.IconTextEntry
+            android:id="@+id/route_via_tor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:text="@string/route_via_tor"
+            app:icon="@drawable/ic_shield_remove_grey600_36dp"
+            android:visibility="visible"
             />
 
         <androidx.appcompat.widget.AppCompatTextView
