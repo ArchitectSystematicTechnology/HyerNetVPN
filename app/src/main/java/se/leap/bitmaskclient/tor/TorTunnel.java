@@ -10,7 +10,7 @@ public class TorTunnel {
     private final TorSocksTunnel torSocksTunnel;
     private final TunOutputStreamWriter packetWriter;
 
-    public static class TunOutputStreamWriter implements tun2torsocks.PacketFlow {
+    public static class TunOutputStreamWriter implements tun2torsocks.SocksOutput {
         private final WeakReference<OutputStream> tunOutputStream;
 
         public TunOutputStreamWriter(OutputStream outputStream) {
@@ -36,7 +36,7 @@ public class TorTunnel {
     }
 
     public void start(String socksIP, long socksPort) {
-        torSocksTunnel.startSocks(packetWriter, socksIP, socksPort);
+        torSocksTunnel.start(packetWriter, socksIP, socksPort);
     }
 
     public void stop() {
