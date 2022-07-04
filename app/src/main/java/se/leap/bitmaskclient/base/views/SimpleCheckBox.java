@@ -97,4 +97,8 @@ public class SimpleCheckBox extends RelativeLayout {
         this.checkView.setEnabled(enabled);
         this.checkBg.setEnabled(enabled);
     }
+
+    public boolean isChecked() {
+        return checked;
+    }
 }

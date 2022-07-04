@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
+    android:paddingTop="8dp"
+    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+    android:paddingRight="?android:attr/listPreferredItemPaddingRight"
+    android:paddingBottom="8dp">
+
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/header_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/activity_margin"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Selected Apps" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/header_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintTop_toBottomOf="@+id/header_title"
+        tools:text="10 apps have been excluded" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

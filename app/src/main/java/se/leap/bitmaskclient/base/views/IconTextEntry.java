@@ -92,6 +92,11 @@ public class IconTextEntry extends LinearLayout {
         subtitleView.setVisibility(VISIBLE);
     }
 
+    public void setSubtitle(CharSequence text) {
+        subtitleView.setText(text);
+        subtitleView.setVisibility(VISIBLE);
+    }
+
     public void hideSubtitle() {
         subtitleView.setVisibility(GONE);
     }

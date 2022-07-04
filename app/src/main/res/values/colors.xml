@@ -82,4 +82,6 @@
     <color name="colorActionBarSubtitleFont">@color/black800</color>
 
     <color name="tor_route_search_app_edit_bg">#FBFBFB</color>
+    <color name="tor_route_info_highlight">#6F7DCB</color>
+
 </resources>
