@@ -36,6 +36,7 @@ import static se.leap.bitmaskclient.base.models.Constants.EIP_N_CLOSEST_GATEWAY;
 import static se.leap.bitmaskclient.base.models.Constants.EIP_REQUEST;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_KEY;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PROFILE;
+import static se.leap.bitmaskclient.base.models.Constants.TOR_ROUTED_APPS;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.CORRECTLY_DOWNLOADED_EIP_SERVICE;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.CORRECTLY_DOWNLOADED_GEOIP_JSON;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.CORRECTLY_UPDATED_INVALID_VPN_CERTIFICATE;
@@ -85,7 +86,7 @@ import se.leap.bitmaskclient.tor.TorStatusObservable;
 /**
  * Created by cyberta on 05.12.18.
  */
-public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.StateListener, VpnStatus.LogListener {
+public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.StateListener, VpnStatus.LogListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = EipSetupObserver.class.getName();
 
@@ -96,13 +97,14 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
     AtomicInteger reconnectTry = new AtomicInteger();
     AtomicBoolean changingGateway = new AtomicBoolean(false);
     AtomicInteger setupNClosestGateway = new AtomicInteger();
-    private Vector<EipSetupListener> listeners = new Vector<>();
-    private SharedPreferences preferences;
+    private final Vector<EipSetupListener> listeners = new Vector<>();
+    private final SharedPreferences preferences;
     private static EipSetupObserver instance;
 
     private EipSetupObserver(Context context, SharedPreferences preferences) {
         this.appContext = context.getApplicationContext();
         this.preferences = preferences;
+        this.preferences.registerOnSharedPreferenceChangeListener(this);
         IntentFilter updateIntentFilter = new IntentFilter(BROADCAST_GATEWAY_SETUP_OBSERVER_EVENT);
         updateIntentFilter.addAction(BROADCAST_EIP_EVENT);
         updateIntentFilter.addAction(BROADCAST_PROVIDER_API_EVENT);
@@ -453,6 +455,14 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
                     break;
 
             }
+        }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(TOR_ROUTED_APPS) && sharedPreferences.contains(TOR_ROUTED_APPS) && VpnStatus.isVPNActive()) {
+            // restart
+            EipCommand.startVPN(appContext, false);
         }
     }
 }
