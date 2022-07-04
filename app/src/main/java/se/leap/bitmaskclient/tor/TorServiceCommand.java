@@ -107,6 +107,17 @@ public class TorServiceCommand {
         new Thread(() -> stopTorService(context)).start();
     }
 
+    public static void restartTorServiceAsync(Context context) {
+        new Thread(() -> {
+            stopTorService(context);
+            try {
+                startTorService(context, null);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
     @WorkerThread
     public static int getHttpTunnelPort(Context context) {
         try {

@@ -37,6 +37,7 @@ import static se.leap.bitmaskclient.base.models.Constants.EIP_REQUEST;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_KEY;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PROFILE;
 import static se.leap.bitmaskclient.base.models.Constants.TOR_ROUTED_APPS;
+import static se.leap.bitmaskclient.base.models.Constants.USE_SNOWFLAKE;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.CORRECTLY_DOWNLOADED_EIP_SERVICE;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.CORRECTLY_DOWNLOADED_GEOIP_JSON;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.CORRECTLY_UPDATED_INVALID_VPN_CERTIFICATE;
@@ -463,6 +464,8 @@ public class EipSetupObserver extends BroadcastReceiver implements VpnStatus.Sta
         if (key.equals(TOR_ROUTED_APPS) && sharedPreferences.contains(TOR_ROUTED_APPS) && VpnStatus.isVPNActive()) {
             // restart
             EipCommand.startVPN(appContext, false);
+        } else if (key.equals(USE_SNOWFLAKE) && TorStatusObservable.isRunning() && PreferenceHelper.isTorInVpnProxyMode(appContext)) {
+            TorServiceCommand.restartTorServiceAsync(appContext);
         }
     }
 }
