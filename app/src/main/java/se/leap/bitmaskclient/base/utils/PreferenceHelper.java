@@ -273,11 +273,6 @@ public class PreferenceHelper {
         return getBoolean(context, USE_SNOWFLAKE, true);
     }
 
-    // TODO: implement setter, change condition: if torified uids are persisted
-    public static Boolean isTorInVpnProxyMode(Context context) {
-        return getBoolean(context, TOR_VPN_PROXY_MODE, true);
-    }
-
     public static void saveBattery(Context context, boolean isEnabled) {
         putBoolean(context, DEFAULT_SHARED_PREFS_BATTERY_SAVER, isEnabled);
     }
@@ -432,9 +427,22 @@ public class PreferenceHelper {
 
 
     public static void setTorRoutedApps(Context context, Set<String> apps) {
+        putStringSet(context, TOR_ROUTED_APPS, apps);
+    }
+
+    public static void putStringSet(Context context, String key, Set<String> set) {
+        if (context == null) {
+            return;
+        }
+
         SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor prefsedit = prefs.edit();
-        prefsedit.putStringSet(TOR_ROUTED_APPS, apps);
+        // For whatever reason SharedPreferences.OnSharedPreferenceChangeListener is never triggered if a set is just replaced
+        // As a workaround for now we delete the set first and re-add it afterwards
+        // FIXME
+        prefsedit.remove(key);
+        prefsedit.apply();
+        prefsedit.putStringSet(key, set);
         prefsedit.apply();
     }
 
@@ -444,6 +452,10 @@ public class PreferenceHelper {
         }
         SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         return preferences.getStringSet(TOR_ROUTED_APPS, new HashSet<>());
+    }
+
+    public static Boolean isTorInVpnProxyMode(Context context) {
+        return !getTorRoutedApps(context).isEmpty();
     }
 
     public static long getLong(Context context, String key, long defValue) {
