@@ -45,6 +45,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.TimeoutException;
 
@@ -54,6 +55,7 @@ import de.blinkt.openvpn.core.VpnStatus.StateListener;
 import de.blinkt.openvpn.core.connection.Connection;
 import de.blinkt.openvpn.core.connection.Obfs4Connection;
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.base.utils.PreferenceHelper;
 import se.leap.bitmaskclient.capture.StreamCapture;
 import se.leap.bitmaskclient.eip.EipStatus;
 import se.leap.bitmaskclient.eip.VpnNotificationManager;
@@ -798,7 +800,7 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
                 StreamCapture.initPacketUtils(this);
                 StreamCapture.setMTU(mMtu);
                 HashSet<Integer> torifiedUIDs = new HashSet<>();
-                String[] packages = new String[]{"org.mozilla.fennec_fdroid"};
+                Set<String> packages =  PreferenceHelper.getTorRoutedApps(this);
                 for (String packet : packages) {
                     torifiedUIDs.add(getUidFromPackage(this, packet));
                 }
