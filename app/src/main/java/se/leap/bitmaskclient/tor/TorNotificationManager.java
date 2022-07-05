@@ -44,11 +44,7 @@ public class TorNotificationManager {
     public TorNotificationManager() {}
 
 
-    public static Notification buildTorForegroundNotification(Context context) {
-        NotificationManager notificationManager = initNotificationManager(context);
-        if (notificationManager == null) {
-            return null;
-        }
+    public static Notification buildTorForegroundNotification(@NonNull Context context) {
         NotificationCompat.Builder notificationBuilder = initNotificationBuilderDefaults(context);
         return notificationBuilder
                 .setSmallIcon(R.drawable.ic_bridge_36)
