@@ -442,7 +442,7 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
             }
         }
 
-        if (isTorInVpnProxyMode(this)) {
+        if (isTorInVpnProxyMode(this) && !TorStatusObservable.isRunning()) {
             startTorService();
         }
 
