@@ -5,13 +5,6 @@ import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -27,12 +20,17 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.Vector;
 
 import de.blinkt.openvpn.VpnProfile;
 import se.leap.bitmaskclient.R;
@@ -48,8 +46,8 @@ public class TorRouteAppsSelectorFragment extends Fragment {
     private PackageAdapter2 mListAdapter;
     private Set<String> excludedApps;
     private Set<String> torRoutedApps;
-    private List<ApplicationInfo> organisedAppList = new ArrayList<>();
-    private List<Pair<Integer, ApplicationInfo>> filteredAppList = new ArrayList<>();
+    private final List<ApplicationInfo> appList = new ArrayList<>();
+    private final List<Pair<Integer, ApplicationInfo>> filteredAppList = new ArrayList<>();
     private PackageManager mPm;
     private final int rowTypeHeader1 = 0;
     private final int rowTypeHeader2 = 1;
@@ -75,13 +73,12 @@ public class TorRouteAppsSelectorFragment extends Fragment {
         mListAdapter = new PackageAdapter2();
         mBinding.rvTorifiedList.setAdapter(mListAdapter);
         mBinding.rvTorifiedList.setLayoutManager(new LinearLayoutManager(getActivity()));
-
         ViewHelper.setActionBarTitle(this, R.string.tor_routed_apps_fragment_title);
-
+        //for filter
         mBinding.editTorAppSelector.addTextChangedListener(new TorAppSelectorTextWatcher());
 
         mPm = requireActivity().getPackageManager();
-
+        //show loading progressbar
         mBinding.loadingContainer.setVisibility(View.VISIBLE);
         new Thread(() -> prepareList(requireActivity())).start();
 
@@ -108,15 +105,15 @@ public class TorRouteAppsSelectorFragment extends Fragment {
 
         @Override
         public void afterTextChanged(Editable s) {
-            if (!TextUtils.isEmpty(s)) {
-                mListAdapter.getFilter().filter(s.toString());
-            }
+            mListAdapter.getFilter().filter(s.toString());
         }
     }
 
+    /**
+     * On time preparing list of apps
+     * @param activity
+     */
     private void prepareList(Activity activity) {
-        List<ApplicationInfo> apps = new ArrayList<>();
-
         List<ApplicationInfo> installedPackages = mPm.getInstalledApplications(PackageManager.GET_META_DATA);
 
         // Remove apps not using Internet
@@ -126,7 +123,7 @@ public class TorRouteAppsSelectorFragment extends Fragment {
         try {
             system = mPm.getApplicationInfo("android", PackageManager.GET_META_DATA);
             androidSystemUid = system.uid;
-            apps.add(system);
+            appList.add(system);
         } catch (PackageManager.NameNotFoundException e) {
         }
 
@@ -134,68 +131,27 @@ public class TorRouteAppsSelectorFragment extends Fragment {
             if (mPm.checkPermission(Manifest.permission.INTERNET, app.packageName) == PackageManager.PERMISSION_GRANTED &&
                     app.uid != androidSystemUid) {
 
-                apps.add(app);
+                appList.add(app);
             }
         }
 
-        Collections.sort(apps, new ApplicationInfo.DisplayNameComparator(mPm));
+        Collections.sort(appList, new ApplicationInfo.DisplayNameComparator(mPm));
 
-        List<ApplicationInfo> torTempList = new ArrayList<>();
-        List<ApplicationInfo> excludedTempList = new ArrayList<>();
-
-        for (int i = 0; i < apps.size(); i++) {
-            //note: excluded app check must come first as user may have added torified app to exclusion
-            // so we dont want to show those apps as still torified
-            if (excludedApps.contains(apps.get(i).packageName)) {
-                excludedTempList.add(apps.get(i));
-
-            } else if (torRoutedApps.contains(apps.get(i).packageName)) {
-                torTempList.add(apps.get(i));
-
-            } else {
-                organisedAppList.add(apps.get(i));
-            }
-        }
-
-        organisedAppList.addAll(0, torTempList);
-        organisedAppList.addAll(organisedAppList.size(), excludedTempList);
-
-        calculateSegment(organisedAppList);
         activity.runOnUiThread(() -> {
-            mListAdapter.notifyDataSetChanged();
+            //this triggers filter with all results
+            mListAdapter.getFilter().filter("");
             mBinding.loadingContainer.setVisibility(View.GONE);
         });
     }
 
-    /**
-     * This adds place holders in location of headers
+
+    /*
      *
-     * @param list organised list(can be filtered but must be organised)
+     * Adapter + 3 Holders.
+     *
+     * Adapter implemented Filterable to use old code :)
+     *
      */
-    private void calculateSegment(List<ApplicationInfo> list) {
-        //If there are 4 torified apps then they are placed as :
-        // header1, 1,2,3,4, header2, ....
-        // so 5th place is header2
-        filteredAppList.clear();
-        filteredAppList.add(0, new Pair<>(rowTypeHeader1, null));
-        int segmentIndex = 1;
-        for (int i = 0; i < list.size(); i++) {
-            filteredAppList.add(new Pair<>(rowTypeAppItem, list.get(i)));
-            if (torRoutedApps.contains(list.get(i).packageName)) {
-                segmentIndex++;
-            }
-        }
-        filteredAppList.add(segmentIndex, new Pair<>(rowTypeHeader2, null));
-    }
-
-
-/*
-*
-* Adapter + 3 Holders.
-*
-* Adapter implemented Filterable to use old code :)
-*
- */
     class PackageAdapter2 extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
         private final LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
 
@@ -238,47 +194,57 @@ public class TorRouteAppsSelectorFragment extends Fragment {
             return new Filter() {
                 @Override
                 protected FilterResults performFiltering(CharSequence constraint) {
-                    String filterString = constraint.toString().toLowerCase(Locale.getDefault());
 
+                    //If there are 4 torified apps then they are placed as :
+                    // header1, 1,2,3,4, header2, ....
+                    // so 5th place is header2
+
+                    String filterString = constraint.toString().toLowerCase(Locale.getDefault());
                     FilterResults results = new FilterResults();
 
+                    filteredAppList.clear();
+                    List<Pair<Integer, ApplicationInfo>> torTempList = new ArrayList<>();
+                    List<Pair<Integer, ApplicationInfo>> excludedTempList = new ArrayList<>();
+                    int segmentIndex = 1;
 
-                    int count = organisedAppList.size();
-                    final Vector<ApplicationInfo> nlist = new Vector<>(count);
 
-                    for (int i = 0; i < count; i++) {
-                        ApplicationInfo pInfo = organisedAppList.get(i);
+                    for (int i = 0; i < appList.size(); i++) {
+                        //note: excluded app check must come first as user may have added torified app to exclusion
+                        // so we dont want to show those apps as still torified
+                        ApplicationInfo pInfo = appList.get(i);
                         CharSequence appName = pInfo.loadLabel(mPm);
 
-                        if (TextUtils.isEmpty(appName))
-                            appName = pInfo.packageName;
+                        if (TextUtils.isEmpty(filterString) || appName.toString().toLowerCase(Locale.getDefault()).contains(filterString)) {
+                            if (excludedApps.contains(appList.get(i).packageName)) {
+                                excludedTempList.add(new Pair<>(rowTypeAppItem, appList.get(i)));
 
-                        if (appName instanceof String) {
-                            if (((String) appName).toLowerCase(Locale.getDefault()).contains(filterString))
-                                nlist.add(pInfo);
-                        } else {
-                            if (appName.toString().toLowerCase(Locale.getDefault()).contains(filterString))
-                                nlist.add(pInfo);
+                            } else if (torRoutedApps.contains(appList.get(i).packageName)) {
+                                torTempList.add(new Pair<>(rowTypeAppItem, appList.get(i)));
+                                segmentIndex++;
+
+                            } else {
+                                filteredAppList.add(new Pair<>(rowTypeAppItem, appList.get(i)));
+                            }
                         }
                     }
-                    results.values = nlist;
-                    results.count = nlist.size();
+
+                    //at this point filteredAppList already has apps that are not torified. So we add torfied app from top
+                    filteredAppList.addAll(0, torTempList);
+                    //add excluded at the bottom
+                    filteredAppList.addAll(filteredAppList.size(), excludedTempList);
+                    //add headers at their respected position
+                    filteredAppList.add(0, new Pair<>(rowTypeHeader1, null));
+                    filteredAppList.add(segmentIndex, new Pair<>(rowTypeHeader2, null));
 
                     return results;
                 }
 
                 @Override
                 protected void publishResults(CharSequence constraint, FilterResults results) {
-                    List<ApplicationInfo> list = (List<ApplicationInfo>) results.values;
-                    calculateSegment(list);
+                    //not using result but notfying adapter here so its thread safe.
                     mListAdapter.notifyDataSetChanged();
                 }
             };
-        }
-
-        public void swapItem(int fromPosition, int toPosition) {
-            Collections.swap(filteredAppList, fromPosition, toPosition);
-            notifyItemMoved(fromPosition, toPosition);
         }
 
         public void moveItem(int fromPosition, int toPosition) {
@@ -305,7 +271,11 @@ public class TorRouteAppsSelectorFragment extends Fragment {
             rowBinding.appSelected.setChecked(torRoutedApps.contains(data.packageName));
             rowBinding.appSelected.setEnabled(!excludedApps.contains(data.packageName));
             rowBinding.appName.setEnabled(!excludedApps.contains(data.packageName));
-            rowBinding.appSelected.setOnClickListener(this);
+            if (!excludedApps.contains(data.packageName)) {
+                rowBinding.appSelected.setOnClickListener(this);
+            } else {
+                rowBinding.appSelected.setOnClickListener(null);
+            }
         }
 
         @Override

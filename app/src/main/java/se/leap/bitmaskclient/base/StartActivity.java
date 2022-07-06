@@ -215,7 +215,6 @@ public class StartActivity extends AppCompatActivity {
         preferences.edit().putInt(PREFERENCES_APP_VERSION, versionCode).apply();
     }
 
-<<<<<<< HEAD
     private void prepareEIP() {
         Provider provider =  ProviderObservable.getInstance().getCurrentProvider();
         if (provider.isConfigured()) {
@@ -229,14 +228,6 @@ public class StartActivity extends AppCompatActivity {
                 EipCommand.startVPN(this, false);
                 showNextActivity(provider);
                 finish();
-=======
-    void prepareEIP() {
-        boolean providerExists = ProviderObservable.getInstance().getCurrentProvider() != null;
-        if (providerExists) {
-            Provider provider = ProviderObservable.getInstance().getCurrentProvider();
-            if (!provider.isConfigured()) {
-                configureLeapProvider();
->>>>>>> added
             } else {
                 showNextActivity(provider);
             }

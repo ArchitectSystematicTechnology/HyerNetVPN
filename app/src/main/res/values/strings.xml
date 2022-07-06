@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
+<<<<<<< HEAD
   <string name="retry">Retry</string>
   <string name="repository_url_text">Source code available at https://0xacab.org/leap/bitmask_android</string>
   <string name="leap_tracker">Issue tracker available at https://0xacab.org/leap/bitmask_android/issues</string>
@@ -224,4 +225,8 @@
   <string name="tor_routed_list_header2">All Apps</string>
   <string name="tor_routed_list_header2_subtitle_part1">%d app(s) have been excluded</string>
   <string name="tor_routed_list_header2_subtitle_part2">been excluded</string>
+  <plurals name="subtitle_tor_routed_apps">
+      <item quantity="one">There is %d Torified app</item>
+      <item quantity="other">There are %d Torified apps</item>
+  </plurals>
 </resources>
