@@ -1,6 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
-<<<<<<< HEAD
   <string name="retry">Retry</string>
   <string name="repository_url_text">Source code available at https://0xacab.org/leap/bitmask_android</string>
   <string name="leap_tracker">Issue tracker available at https://0xacab.org/leap/bitmask_android/issues</string>
@@ -222,6 +221,7 @@
   <string name="tor_anonymizer_info">Choose which apps you want anonymized using Tor. Selected apps will be routed over Tor, not CalyxVPN. You can not select previously excluded apps.</string>
   <string name="search_app">Search app</string>
   <string name="tor_routed_apps_fragment_title">Tor Tunnel Selector</string>
+  <string name="tor_routed_list_header1">Selected Apps</string>
   <string name="tor_routed_list_header2">All Apps</string>
   <string name="tor_routed_list_header2_subtitle_part1">%d app(s) have been excluded</string>
   <string name="tor_routed_list_header2_subtitle_part2">been excluded</string>
