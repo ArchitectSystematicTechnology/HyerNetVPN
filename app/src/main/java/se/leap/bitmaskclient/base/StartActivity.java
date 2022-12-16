@@ -215,7 +215,7 @@ public class StartActivity extends AppCompatActivity {
         preferences.edit().putInt(PREFERENCES_APP_VERSION, versionCode).apply();
     }
 
-    private void prepareEIP() {
+    public void prepareEIP() {
         Provider provider =  ProviderObservable.getInstance().getCurrentProvider();
         if (provider.isConfigured()) {
             Log.d(TAG, "vpn provider is configured");

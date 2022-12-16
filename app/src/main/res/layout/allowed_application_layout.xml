@@ -15,7 +15,6 @@
     android:paddingBottom="8dip"
     android:columnCount="4"
     tools:ignore="RtlCompat"
-    tools:viewBindingIgnore="true"
     >
 
     <ImageView

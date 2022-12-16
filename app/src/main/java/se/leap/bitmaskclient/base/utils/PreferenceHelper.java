@@ -499,14 +499,6 @@ public class PreferenceHelper {
         preferences.edit().putString(key, value).apply();
     }
 
-    public static void putStringSet(Context context, String key, Set<String> value) {
-        if (context == null) {
-            return;
-        }
-        SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
-        preferences.edit().putStringSet(key, value).apply();
-    }
-
     public static boolean getBoolean(Context context, String key, Boolean defValue) {
         if (context == null) {
             return false;
