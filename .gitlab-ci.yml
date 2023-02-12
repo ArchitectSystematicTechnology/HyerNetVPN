@@ -43,7 +43,6 @@ docker_image:ndk:
   variables:
     DOCKER_IMAGE: android-ndk
   <<: *build_docker_image
-  when: manual
 
 docker_image:emulator:
   stage: docker_image_other
@@ -81,6 +80,7 @@ screenshot:
   image: "0xacab.org:4567/leap/bitmask_android/android-fastlane:latest"
   stage: test
   when: always
+  needs: ["docker_image:sdk"]
   tags:
     - runner02-sea
   variables:
