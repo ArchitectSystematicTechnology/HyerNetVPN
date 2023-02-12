@@ -55,8 +55,7 @@ docker_image:fastlane:
   stage: docker_image_other
   variables:
   tags:
-    - docker-in-docker
-    - dind
+    - runner02-sea
 #  DOCKER_IMAGE: android-fastlane
 #    DEFAULT_IMAGE: "registry.0xacab.org/leap/bitmask_android/android-emulator"
   when: manual
@@ -80,7 +79,7 @@ screenshot:
   stage: test
   when: always
   tags:
-    - dind
+    - runner02-sea
   variables:
     LC_ALL: "en_US.UTF-8"
     LANG: "en_US.UTF-8"
