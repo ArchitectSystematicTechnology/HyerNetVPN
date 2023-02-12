@@ -57,7 +57,7 @@ docker_image:fastlane:
   tags:
     - docker-in-docker
     - dind
-  DOCKER_IMAGE: android-fastlane
+#  DOCKER_IMAGE: android-fastlane
 #    DEFAULT_IMAGE: "registry.0xacab.org/leap/bitmask_android/android-emulator"
   when: manual
   <<: *build_docker_image
@@ -79,6 +79,8 @@ screenshot:
   image: "0xacab.org:4567/leap/bitmask_android/android-fastlane:latest"
   stage: test
   when: always
+  tags:
+    - dind
   variables:
     LC_ALL: "en_US.UTF-8"
     LANG: "en_US.UTF-8"
