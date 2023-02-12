@@ -95,6 +95,7 @@ screenshot:
     - ./scripts/prepareForScreenshots.sh
     - ./gradlew testCustomProductionFatReleaseUnitTest testNormalProductionFatReleaseUnitTest
     - ./scripts/installFastlane.sh
+    - ./scripts/startEmulators.sh
     - ./scripts/fastlane.sh
     - sleep 2h
   artifacts:
