@@ -37,7 +37,6 @@ docker_image:sdk:
   variables:
     DOCKER_IMAGE: android-sdk
   <<: *build_docker_image
-  when: manual
 
 docker_image:ndk:
   stage: docker_image_other
@@ -90,8 +89,8 @@ screenshot:
     ANDROID_EMULATOR_USE_SYSTEM_LIBS: 1
     DEBIAN_FRONTEN: "noninteractive"
 # try to re-use the build artifcats from before, lib building is slow
-  dependencies:
-    - build
+#  dependencies:
+#    - build
   script:
     - ./scripts/prepareForScreenshots.sh
     - ./gradlew testCustomProductionFatReleaseUnitTest testNormalProductionFatReleaseUnitTest
