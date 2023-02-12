@@ -37,12 +37,14 @@ docker_image:sdk:
   variables:
     DOCKER_IMAGE: android-sdk
   <<: *build_docker_image
+  when: manual
 
 docker_image:ndk:
   stage: docker_image_other
   variables:
     DOCKER_IMAGE: android-ndk
   <<: *build_docker_image
+  when: manual
 
 docker_image:emulator:
   stage: docker_image_other
@@ -50,6 +52,7 @@ docker_image:emulator:
     DOCKER_IMAGE: android-emulator
   allow_failure: true
   <<: *build_docker_image
+  when: manual
 
 docker_image:fastlane:
   stage: docker_image_other
@@ -73,6 +76,7 @@ unit_test:
       - app/build/reports/tests
     when: on_failure
     expire_in: 3 days
+  when: manual
 
 screenshot:
   image: "0xacab.org:4567/leap/bitmask_android/android-fastlane:latest"
