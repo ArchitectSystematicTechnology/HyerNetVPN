@@ -51,6 +51,18 @@ docker_image:emulator:
   allow_failure: true
   <<: *build_docker_image
 
+docker_image:fastlane:
+  stage: docker_image_other
+  variables:
+  tags:
+    - docker-in-docker
+    - dind
+  DOCKER_IMAGE: android-fastlane
+#    DEFAULT_IMAGE: "registry.0xacab.org/leap/bitmask_android/android-emulator"
+  when: manual
+  <<: *build_docker_image
+  allow_failure: true
+
 unit_test:
   image: "0xacab.org:4567/leap/bitmask_android/android-ndk:latest"
   stage: test
@@ -62,6 +74,35 @@ unit_test:
       - app/build/reports/tests
     when: on_failure
     expire_in: 3 days
+
+screenshot:
+  image: "0xacab.org:4567/leap/bitmask_android/android-fastlane:latest"
+  stage: test
+  when: always
+  variables:
+    LC_ALL: "en_US.UTF-8"
+    LANG: "en_US.UTF-8"
+    ANDROID_EMULATOR_USE_SYSTEM_LIBS: 1
+    DEBIAN_FRONTEN: "noninteractive"
+# try to re-use the build artifcats from before, lib building is slow
+  dependencies:
+    - build
+  script:
+    - ./scripts/prepareForScreenshots.sh
+    - ./gradlew testCustomProductionFatReleaseUnitTest testNormalProductionFatReleaseUnitTest
+    - ./scripts/installFastlane.sh
+    - ./scripts/fastlane.sh
+    - sleep 2h
+  artifacts:
+    paths:
+      - app
+      - app/build/screenshots
+      - ./source/custom/fastlane/metadata/
+      - build/
+    when: on_success
+    expire_in: 3 days
+  allow_failure: true
+
 
 #ui_test:
 #  image: "0xacab.org:4567/leap/bitmask_android/android-emulator:latest"
