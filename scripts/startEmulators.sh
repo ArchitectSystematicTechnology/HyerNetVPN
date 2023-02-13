@@ -5,6 +5,8 @@ apt-get update
 apt-get install -y libpulse-java libpulse0 imagemagick
 # there's a QT thing missing
 dpkg -l 
+emulator -accel-check
+
 # apt-get install libpulse-java libpulse0:i386
 
 
@@ -41,6 +43,7 @@ timeout=30
 echo y | sdkmanager "emulator"
 avdmanager list avd
 find /opt -iname emulator -type f
+QT_QPA_PLATFORM=offscreen 
 
 waitForAdbDevices() {
 	while true; do
@@ -68,5 +71,4 @@ echo "adb found all emulators..."
 #wait for each emulator that booting completed
 adb devices | grep -v List | awk '$2{print $1}' | xargs -I{} .gitlab/wait-for-emulator.sh -s {}
 echo "all emulators successfully booted"
-
 
