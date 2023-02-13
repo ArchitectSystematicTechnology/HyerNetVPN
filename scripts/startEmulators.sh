@@ -2,13 +2,14 @@
 
 PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools:$ANDROID_HOME/emulator
 apt-get update
-apt-get install -y libpulse-java libpulse0 imagemagick
+#apt-get install -y libpulse-java libpulse0 imagemagick libx11-xcb1
+apt-get install -y libpulse-java libpulse0 imagemagick libxkbcommon-x11-0
 # there's a QT thing missing
 dpkg -l 
 emulator -accel-check
+docker info
 
 # apt-get install libpulse-java libpulse0:i386
-
 
 # init parameters
 for ((i=1;i<=$#;i++)); 
