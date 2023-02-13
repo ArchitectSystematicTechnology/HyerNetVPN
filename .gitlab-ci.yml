@@ -55,8 +55,6 @@ docker_image:emulator:
 docker_image:fastlane:
   stage: docker_image_other
   variables:
-  tags:
-    - runner02-sea
 #  DOCKER_IMAGE: android-fastlane
 #    DEFAULT_IMAGE: "registry.0xacab.org/leap/bitmask_android/android-emulator"
   when: manual

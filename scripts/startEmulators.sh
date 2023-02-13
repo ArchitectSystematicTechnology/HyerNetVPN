@@ -1,8 +1,12 @@
 #!/bin/bash
 
 PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools:$ANDROID_HOME/emulator
-dpkg -l | grep pulse
-apt-get install libpulse-java
+apt-get update
+apt-get install -y libpulse-java libpulse0 imagemagick
+# there's a QT thing missing
+dpkg -l 
+# apt-get install libpulse-java libpulse0:i386
+
 
 # init parameters
 for ((i=1;i<=$#;i++)); 
