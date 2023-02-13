@@ -3,7 +3,7 @@
 
 echo $PATH
 echo $ANDROID_HOME
-PATH=$(PATH):${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/Sdk/tools
+PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools
 
 # init parameters
 for ((i=1;i<=$#;i++)); 
@@ -38,6 +38,7 @@ timeout=30
 echo y | sdkmanager "emulator"
 avdmanager list avd
 which emulator
+find /opt -iname emulator -type f
 
 waitForAdbDevices() {
 	while true; do
@@ -48,7 +49,7 @@ waitForAdbDevices() {
        		if [[ "$out" == "$N" ]]; then
                 	break
         	fi
-        	let "r = sec % 5"
+        	let "r = sec % 50"
         	if [[ $r -eq 0 ]]; then
                 	echo "Waiting for adb devices to start: $out / $N"
         	fi
