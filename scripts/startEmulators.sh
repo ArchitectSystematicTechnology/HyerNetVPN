@@ -27,8 +27,11 @@ err() {
         exit 1
 }
 sec=0
-emulator -list-avds
 timeout=30
+
+# make sure the emulator is there - and in the PATH
+echo y | sdkmanager "emulator"
+
 waitForAdbDevices() {
 	while true; do
         	if [[ $sec -ge $timeout ]]; then
