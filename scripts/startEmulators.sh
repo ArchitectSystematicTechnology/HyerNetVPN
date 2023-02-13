@@ -27,6 +27,7 @@ err() {
         exit 1
 }
 sec=0
+emulator -list-avds
 timeout=30
 waitForAdbDevices() {
 	while true; do
