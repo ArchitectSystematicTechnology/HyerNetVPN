@@ -3,7 +3,7 @@
 
 echo $PATH
 echo $ANDROID_HOME
-PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools
+PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools:$ANDROID_HOME/emulator
 
 # init parameters
 for ((i=1;i<=$#;i++)); 
