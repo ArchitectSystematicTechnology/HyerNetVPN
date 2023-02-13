@@ -1,5 +1,10 @@
 #!/bin/bash
 
+
+echo $PATH
+echo $ANDROID_HOME
+PATH=$(PATH):${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/Sdk/tools
+
 # init parameters
 for ((i=1;i<=$#;i++)); 
 do
@@ -31,6 +36,8 @@ timeout=30
 
 # make sure the emulator is there - and in the PATH
 echo y | sdkmanager "emulator"
+avdmanager list avd
+which emulator
 
 waitForAdbDevices() {
 	while true; do
@@ -51,7 +58,7 @@ waitForAdbDevices() {
 }
 
 #start first N avd images
-avdmanager list avd | grep Name: | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -avd {} &
+avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -avd {} &
 waitForAdbDevices
 echo "adb found all emulators..."
 
