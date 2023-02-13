@@ -1,9 +1,8 @@
 #!/bin/bash
 
-
-echo $PATH
-echo $ANDROID_HOME
 PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools:$ANDROID_HOME/emulator
+dpkg -l | grep pulse
+apt-get install libpulse-java
 
 # init parameters
 for ((i=1;i<=$#;i++)); 
@@ -37,7 +36,6 @@ timeout=30
 # make sure the emulator is there - and in the PATH
 echo y | sdkmanager "emulator"
 avdmanager list avd
-which emulator
 find /opt -iname emulator -type f
 
 waitForAdbDevices() {
