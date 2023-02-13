@@ -79,8 +79,8 @@ screenshot:
   stage: test
   when: always
   needs: ["docker_image:sdk"]
-#  tags:
-#    - runner02-sea
+  tags:
+    - runner02-sea
   variables:
     LC_ALL: "en_US.UTF-8"
     LANG: "en_US.UTF-8"
