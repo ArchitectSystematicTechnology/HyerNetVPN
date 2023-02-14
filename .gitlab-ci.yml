@@ -84,7 +84,7 @@ screenshot:
   variables:
     LC_ALL: "en_US.UTF-8"
     LANG: "en_US.UTF-8"
-    ANDROID_EMULATOR_USE_SYSTEM_LIBS: 1
+#    ANDROID_EMULATOR_USE_SYSTEM_LIBS: 1
     DEBIAN_FRONTEN: "noninteractive"
 # try to re-use the build artifcats from before, lib building is slow
 #  dependencies:
