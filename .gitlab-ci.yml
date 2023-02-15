@@ -56,7 +56,7 @@ docker_image:emulator:
 docker_image:fastlane:
   stage: docker_image_other
   variables:
-#  DOCKER_IMAGE: android-fastlane
+    DOCKER_IMAGE: android-fastlane
 #    DEFAULT_IMAGE: "registry.0xacab.org/leap/bitmask_android/android-emulator"
   when: manual
   <<: *build_docker_image
@@ -77,9 +77,10 @@ unit_test:
 
 screenshot:
   image: "0xacab.org:4567/leap/bitmask_android/android-fastlane:latest"
-  stage: test
+#  stage: test
+  stage: docker_image_sdk
   when: always
-  needs: ["docker_image:sdk"]
+#  needs: ["docker_image:sdk"]
   tags:
     - runner02-sea
   variables:
