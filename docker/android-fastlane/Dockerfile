@@ -31,7 +31,8 @@ RUN apt-get update -qq && \
     apt-get install -y docker-ce docker-ce-cli make gcc swig file lib32stdc++6 lib32z1 \
     autoconf autogen automake autopoint autotools-dev gettext-base libtool patch pkg-config po4a \
     curl git openjdk-11-jdk openjdk-11-jre-headless imagemagick libpulse0 po4a \
-    make build-essential ruby-dev imagemagick docker-ce-cli mesa-utils  && \
+    make build-essential ruby-dev imagemagick docker-ce-cli mesa-utils \
+    libstdc++6 libncurses5 libsdl1.2debian && \
     apt-get clean && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
