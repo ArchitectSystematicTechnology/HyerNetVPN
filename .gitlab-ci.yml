@@ -82,7 +82,7 @@ screenshot:
   when: always
 #  needs: ["docker_image:sdk"]
   tags:
-    - runner02-sea
+    - birch
   variables:
     LC_ALL: "en_US.UTF-8"
     LANG: "en_US.UTF-8"
