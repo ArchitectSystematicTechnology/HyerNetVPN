@@ -15,7 +15,7 @@ sdkmanager "platforms;android-25"
 # Install Android SDK emulator package
 echo y | sdkmanager "emulator"
 
-echo y | sdkmanager "system-images;android-25;google_apis;x86_64"
+#echo y | sdkmanager "system-images;android-25;google_apis;x86_64"
 echo y | sdkmanager "system-images;android-27;google_apis;x86"
 
 #echo y | sdkmanager "system-images;android-31;google_apis;x86_64"
@@ -23,11 +23,11 @@ echo y | sdkmanager "system-images;android-27;google_apis;x86"
 #echo no | avdmanager create avd --force --name testApi31 --abi google_apis/x86_64 --package 'system-images;android-31;google_apis;x86_64'
 #echo no | avdmanager create avd --force --name testApiduet --abi google_apis/x86_64 --package 'system-images;android-31;google_apis;x86_64'
  
-echo no | avdmanager create avd --force --name testApi25 --abi google_apis/x86_64 --package 'system-images;android-25;google_apis;x86_64'
-echo no | avdmanager create avd --force --name testApiduet --abi google_apis/x86_64 --package 'system-images;android-25;google_apis;x86_64'
+#echo no | avdmanager create avd --force --name testApi25 --abi google_apis/x86_64 --package 'system-images;android-25;google_apis;x86_64'
+#echo no | avdmanager create avd --force --name testApiduet --abi google_apis/x86_64 --package 'system-images;android-25;google_apis;x86_64'
  
-#echo no | avdmanager create avd --force --name testApi27 --abi google_apis/x86_64 --package 'system-images;android-27;google_apis;x86_64'
-#echo no | avdmanager create avd --force --name testApiduet --abi google_apis/x86_64 --package 'system-images;android-27;google_apis;x86_64'
+echo no | avdmanager create avd --force --name testApi27 --abi google_apis/x86_64 --package 'system-images;android-27;google_apis;x86_64'
+echo no | avdmanager create avd --force --name testApiduet --abi google_apis/x86_64 --package 'system-images;android-27;google_apis;x86_64'
 
 #
 #
