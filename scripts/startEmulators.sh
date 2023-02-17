@@ -2,14 +2,10 @@
 
 PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools:$ANDROID_HOME/emulator
 apt-get update
-#apt-get install -y libpulse-java libpulse0 imagemagick libx11-xcb1
 apt-get install -y libpulse-java libpulse0 imagemagick libxkbcommon-x11-0
 # there's a QT thing missing
-dpkg -l 
 emulator -accel-check
 docker info
-
-# apt-get install libpulse-java libpulse0:i386
 
 # init parameters
 for ((i=1;i<=$#;i++)); 
@@ -43,8 +39,9 @@ timeout=30
 # make sure the emulator is there - and in the PATH
 echo y | sdkmanager "emulator"
 avdmanager list avd
+emulator -version
 find /opt -iname emulator -type f
-QT_QPA_PLATFORM=offscreen 
+export QT_QPA_PLATFORM=offscreen 
 
 waitForAdbDevices() {
 	while true; do
@@ -65,7 +62,7 @@ waitForAdbDevices() {
 }
 
 #start first N avd images
-avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -avd {} &
+avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -no-window -avd {} &
 waitForAdbDevices
 echo "adb found all emulators..."
 
