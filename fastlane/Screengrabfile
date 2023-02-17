@@ -11,7 +11,7 @@ reinstall_app(true)
 # prioritized locales
 # locales(['ar', 'bn', 'de', 'es', 'fa-IR', 'fr', 'he', 'hu', 'id', 'it', 'ja', 'my', 'nl', 'pt-BR', 'pt-PT', 'ru', 'tr', 'ug', 'uk', 'zh-CN', 'zh-TW'])
 # development locales
-locales(['ar', 'de', 'ru'])
+locales(['es-AR', 'de', 'ru'])
 
 # clear all previously generated screenshots in your local output directory before creating new ones
 clear_previous_screenshots(true)
