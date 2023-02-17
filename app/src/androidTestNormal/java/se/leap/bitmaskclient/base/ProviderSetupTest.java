@@ -45,7 +45,8 @@ public class ProviderSetupTest {
 
     @Before
     public void setup() {
-        Screengrab.setDefaultScreenshotStrategy(new UiAutomatorScreenshotStrategy());
+	Screengrab.setDefaultScreenshotStrategy(new FalconScreenshotStrategy(activityRule.getActivity()));
+        //Screengrab.setDefaultScreenshotStrategy(new UiAutomatorScreenshotStrategy());
         SharedPreferences preferences = getApplicationContext().getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE);
         preferences.edit().clear().commit();
     }
