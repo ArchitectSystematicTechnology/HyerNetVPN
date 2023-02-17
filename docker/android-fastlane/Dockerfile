@@ -32,7 +32,7 @@ RUN apt-get update -qq && \
     autoconf autogen automake autopoint autotools-dev gettext-base libtool patch pkg-config po4a \
     curl git openjdk-11-jdk openjdk-11-jre-headless imagemagick libpulse0 po4a \
     make build-essential ruby-dev imagemagick docker-ce-cli mesa-utils \
-    libstdc++6 libncurses5 libsdl1.2debian imagemagick && \
+    libstdc++6 libncurses5 libsdl1.2debian imagemagick libpulse-java libpulse0 libxkbcommon-x11-0 && \
     apt-get clean && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
