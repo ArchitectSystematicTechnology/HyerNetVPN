@@ -97,7 +97,6 @@ screenshot:
     - ./gradlew testCustomProductionFatReleaseUnitTest testNormalProductionFatReleaseUnitTest
     - ./scripts/startEmulators.sh
     - ./scripts/fastlane.sh
-    - sleep 1h
   artifacts:
     paths:
       - app
