@@ -61,8 +61,9 @@ waitForAdbDevices() {
 }
 
 #start first N avd images
-avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -avd {} &
-#avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-window -no-audio -no-snapshot -avd {} &
+#avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -avd {} &
+avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-window -no-audio -no-snapshot -avd {} &
+export DISPLAY=:99.0
 #avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -no-window -avd {} &
 # avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -no-window -no-boot-anim -accel on  -avd {} &
 waitForAdbDevices
