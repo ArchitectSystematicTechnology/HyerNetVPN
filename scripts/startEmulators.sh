@@ -2,7 +2,7 @@
 
 PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools:$ANDROID_HOME/emulator
 apt-get update
-apt-get install -y libpulse-java libpulse0 imagemagick libxkbcommon-x11-0 xvfb
+apt-get install -y libpulse-java libpulse0 imagemagick libxkbcommon-x11-0 xvfb vulkan-tools
 # there's a QT thing missing
 emulator -accel-check
 docker info
