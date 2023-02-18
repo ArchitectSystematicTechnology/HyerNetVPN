@@ -2,7 +2,7 @@
 
 PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/Sdk/tools:$ANDROID_HOME/emulator
 apt-get update
-apt-get install -y libpulse-java libpulse0 imagemagick libxkbcommon-x11-0
+apt-get install -y libpulse-java libpulse0 imagemagick libxkbcommon-x11-0 xvfb
 # there's a QT thing missing
 emulator -accel-check
 docker info
@@ -41,7 +41,6 @@ echo y | sdkmanager "emulator"
 avdmanager list avd
 emulator -version
 find /opt -iname emulator -type f
-export QT_QPA_PLATFORM=offscreen 
 
 waitForAdbDevices() {
 	while true; do
@@ -62,8 +61,9 @@ waitForAdbDevices() {
 }
 
 #start first N avd images
-#avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -avd {} &
-avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-window -no-audio -no-snapshot -avd {} &
+avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -avd {} &
+#avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-window -no-audio -no-snapshot -avd {} &
+#avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -no-window -avd {} &
 # avdmanager list avd | grep 'Name:' | cut -d ':' -f2 | head -n $N |  xargs -I{} -P$N -n1 emulator -no-snapshot -no-window -no-boot-anim -accel on  -avd {} &
 waitForAdbDevices
 echo "adb found all emulators..."
