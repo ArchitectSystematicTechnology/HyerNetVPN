@@ -3,7 +3,7 @@
 ## --- System Dependencies for fastlane
 apt-get update -qq && \
 apt-get -y dist-upgrade && \
-apt-get -y install make build-essential ruby ruby-dev imagemagick xvfb libxcb1 libname-dev
+apt-get -y install make build-essential ruby ruby-dev imagemagick xvfb libxcb1
 
 gem install fastlane
 
