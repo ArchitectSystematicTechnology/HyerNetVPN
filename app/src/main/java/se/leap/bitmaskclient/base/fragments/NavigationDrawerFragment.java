@@ -428,7 +428,13 @@ public class NavigationDrawerFragment extends Fragment implements SharedPreferen
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(PREFERRED_CITY)) {
+        final String PREFERRED_CITY = "Preferred location city";
+        if (key != null && key.equals(PREFERRED_CITY)) {
+            initManualGatewayEntry();
+        }
+        else if (key == null && !sharedPreferences.contains(PREFERRED_CITY)) {
+            // Set default value for PREFERRED_CITY
+            sharedPreferences.edit().putString(PREFERRED_CITY, "Seattle").apply();
             initManualGatewayEntry();
         }
     }
