@@ -4,6 +4,9 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
 # init parameters
 if [[ ${1} = "custom" ]]; then
   BUILD_CUSTOM=true
