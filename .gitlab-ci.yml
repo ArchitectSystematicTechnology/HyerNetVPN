@@ -75,7 +75,8 @@ unit_test:
 
 screenshot:
   image: "0xacab.org:4567/leap/bitmask_android/android-fastlane:latest"
-  stage: test
+#stage: test
+  stage: docker_image_sdk
   when: always
 #  needs: ["docker_image:fastlane"]
   tags:
