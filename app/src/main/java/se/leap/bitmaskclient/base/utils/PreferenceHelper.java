@@ -16,6 +16,7 @@ import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_IP
 import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_KCP;
 import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_LOCATION;
 import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_PORT;
+import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_TRANSPORT;
 import static se.leap.bitmaskclient.base.models.Constants.PREFERRED_CITY;
 import static se.leap.bitmaskclient.base.models.Constants.PREFER_UDP;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_CONFIGURED;
@@ -52,6 +53,7 @@ import java.util.Set;
 import de.blinkt.openvpn.VpnProfile;
 import se.leap.bitmaskclient.BuildConfig;
 import se.leap.bitmaskclient.base.models.Provider;
+import se.leap.bitmaskclient.base.models.Transport;
 import se.leap.bitmaskclient.tor.TorStatusObservable;
 
 /**
@@ -327,9 +329,15 @@ public class PreferenceHelper {
         return ConfigHelper.ObfsVpnHelper.useObfsVpn() &&
                 getUseBridges(context) &&
                 getBoolean(context, USE_OBFUSCATION_PINNING, false) &&
-                !TextUtils.isEmpty(getObfuscationPinningIP(context)) &&
-                !TextUtils.isEmpty(getObfuscationPinningCert(context)) &&
-                !TextUtils.isEmpty(getObfuscationPinningPort(context));
+                getObfuscationPinningTransport(context) != null;
+    }
+
+    public static void setObufscationPinningTransport(Context context, Transport transport) {
+        putString(context, OBFUSCATION_PINNING_TRANSPORT, transport.toString());
+    }
+
+    public static String getObfuscationPinningTransport(Context context) {
+        return getString(context, OBFUSCATION_PINNING_TRANSPORT, null);
     }
 
     public static void setObfuscationPinningIP(Context context, String ip) {
