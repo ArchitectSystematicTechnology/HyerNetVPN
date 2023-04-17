@@ -25,10 +25,7 @@ import static se.leap.bitmaskclient.base.models.Constants.HOST;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PRIVATE_KEY;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_VPN_CERTIFICATE;
 import static se.leap.bitmaskclient.base.models.Constants.SORTED_GATEWAYS;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningCert;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningIP;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningKCP;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningPort;
+import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningTransport;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getPreferredCity;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getUseBridges;
 
@@ -402,13 +399,10 @@ public class GatewaysManager {
 
              if (PreferenceHelper.useObfuscationPinning(context)) {
                  try {
-                     Transport[] transports = new Transport[]{
-                             new Transport(OBFS4.toString(),
-                                     new String[]{getObfuscationPinningKCP(context) ? "kcp" : "tcp"},
-                                     new String[]{getObfuscationPinningPort(context)},
-                                     getObfuscationPinningCert(context))};
+                     Transport transport = getObfuscationPinningTransport(context);
+                     Transport[] transports = new Transport[]{transport};
                      GatewayJson.Capabilities capabilities = new GatewayJson.Capabilities(false, false, false, transports, false);
-                     GatewayJson gatewayJson = new GatewayJson(context.getString(R.string.unknown_location), getObfuscationPinningIP(context), null, PINNED_OBFUSCATION_PROXY, capabilities);
+                     GatewayJson gatewayJson = new GatewayJson(context.getString(R.string.unknown_location), transport.getIPFromEndpoints(), null, PINNED_OBFUSCATION_PROXY, capabilities);
                      Gateway gateway = new Gateway(eipDefinition, secrets, new JSONObject(gatewayJson.toString()), this.context);
                      addGateway(gateway);
                  } catch (JSONException | ConfigParser.ConfigParseError | IOException e) {

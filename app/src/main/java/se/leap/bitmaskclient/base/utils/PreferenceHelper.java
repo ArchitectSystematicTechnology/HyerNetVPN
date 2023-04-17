@@ -37,7 +37,6 @@ import static se.leap.bitmaskclient.base.models.Constants.USE_SNOWFLAKE;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
@@ -51,6 +50,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import de.blinkt.openvpn.VpnProfile;
+import de.blinkt.openvpn.core.connection.Connection;
 import se.leap.bitmaskclient.BuildConfig;
 import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.base.models.Transport;
@@ -332,12 +332,29 @@ public class PreferenceHelper {
                 getObfuscationPinningTransport(context) != null;
     }
 
-    public static void setObufscationPinningTransport(Context context, Transport transport) {
+    public static void setObfuscationPinningTransport(Context context, Transport transport) {
         putString(context, OBFUSCATION_PINNING_TRANSPORT, transport.toString());
     }
 
-    public static String getObfuscationPinningTransport(Context context) {
-        return getString(context, OBFUSCATION_PINNING_TRANSPORT, null);
+    public static Transport getObfuscationPinningTransport(Context context) {
+        return getObfuscationPinningTransport(context, true);
+    }
+
+    public static Transport getObfuscationPinningTransport(Context context, boolean compatFix) {
+        try {
+            String transportString = getString(context, OBFUSCATION_PINNING_TRANSPORT, null);
+            if (transportString != null) {
+                Transport transport = Transport.fromJson(new JSONObject(getString(context, OBFUSCATION_PINNING_TRANSPORT, null)));
+                // compatibility hack...
+                if (compatFix && transport.getTransportType() == Connection.TransportType.OBFS4) {
+                    transport.getOptions().setCert(transport.getCertFromEndpoints());
+                }
+                return transport;
+            }
+        } catch (JSONException | NullPointerException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static void setObfuscationPinningIP(Context context, String ip) {

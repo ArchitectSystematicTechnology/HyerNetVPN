@@ -64,6 +64,20 @@ public class Transport implements Serializable {
         return gson.toJson(this);
     }
 
+    public @Nullable String getIPFromEndpoints() {
+        if (options == null || options.endpoints == null || options.endpoints.length == 0) {
+            return null;
+        }
+        return options.endpoints[0].ip;
+    }
+
+    public @Nullable String getCertFromEndpoints() {
+        if (options == null || options.endpoints == null || options.endpoints.length == 0) {
+            return null;
+        }
+        return options.endpoints[0].cert;
+    }
+
     public static Transport fromJson(JSONObject json) {
         GsonBuilder builder = new GsonBuilder();
         return builder.

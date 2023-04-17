@@ -22,7 +22,6 @@ import static de.blinkt.openvpn.core.connection.Connection.TransportType.OPENVPN
 import static se.leap.bitmaskclient.base.models.Constants.CAPABILITIES;
 import static se.leap.bitmaskclient.base.models.Constants.IP_ADDRESS;
 import static se.leap.bitmaskclient.base.models.Constants.IP_ADDRESS6;
-import static se.leap.bitmaskclient.base.models.Constants.KCP;
 import static se.leap.bitmaskclient.base.models.Constants.PORTS;
 import static se.leap.bitmaskclient.base.models.Constants.PROTOCOLS;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PRIVATE_KEY;
@@ -69,12 +68,6 @@ public class VpnConfigGenerator {
     private final boolean preferUDP;
     private final boolean experimentalTransports;
     private final boolean useObfuscationPinning;
-
-    private final Transport obfuscationPinningTransport;
-  //  private final String obfuscationPinningIP;
-  //  private final String obfuscationPinningPort;
-  //  private final String obfuscationPinningCert;
-  //  private final boolean obfuscationPinningKCP;
     private final String remoteGatewayIP;
     private final String profileName;
     private final Set<String> excludedApps;
@@ -92,11 +85,6 @@ public class VpnConfigGenerator {
         Set<String> excludedApps = null;
 
         boolean useObfuscationPinning;
-  //      boolean obfuscationProxyKCP;
- //       String obfuscationProxyIP = "";
- //       String obfuscationProxyPort = "";
- //       String obfuscationProxyCert = "";
-
         Transport obfuscationProxyTransport;
     }
 
@@ -108,11 +96,14 @@ public class VpnConfigGenerator {
         this.preferUDP = config.preferUDP;
         this.experimentalTransports = config.experimentalTransports;
         this.useObfuscationPinning = config.useObfuscationPinning;
-        this.obfuscationPinningTransport = useObfuscationPinning ? config.obfuscationProxyTransport : null;
         this.remoteGatewayIP = config.remoteGatewayIP;
         this.profileName = config.profileName;
         this.excludedApps = config.excludedApps;
-        checkCapabilities();
+        if (useObfuscationPinning) {
+            transports.put(config.obfuscationProxyTransport.getTransportType(), config.obfuscationProxyTransport);
+        } else {
+            checkCapabilities();
+        }
     }
 
     public void checkCapabilities() throws ConfigParser.ConfigParseError {
@@ -197,18 +188,8 @@ public class VpnConfigGenerator {
     }
 
     private Obfs4Options getObfs4Options(TransportType transportType) throws JSONException {
-        String ip = gateway.getString(IP_ADDRESS);
-        Transport transport;
-        if (useObfuscationPinning) {
-            transport = obfuscationPinningTransport;
-            ip = obfuscationPinningTransport.getOptions().getEndpoints()[0].getIp();
-            // hack just for compatibility reasons for now
-            if (obfuscationPinningTransport.getTransportType() == OBFS4) {
-                obfuscationPinningTransport.getOptions().setCert(obfuscationPinningTransport.getOptions().getEndpoints()[0].getCert());
-            }
-        } else {
-            transport = transports.get(transportType);
-        }
+        Transport transport = transports.get(transportType);
+        String ip = useObfuscationPinning ? transport.getIPFromEndpoints() : gateway.getString(IP_ADDRESS);
         return new Obfs4Options(ip, transport);
     }
 
@@ -390,9 +371,6 @@ public class VpnConfigGenerator {
 
     public String getRemoteString(String ipAddress, Transport transport) {
         if (useObfsVpn()) {
-            if (useObfuscationPinning) {
-                return REMOTE + " " + obfuscationPinningTransport.getOptions().getEndpoints()[0].getIp() + " " + obfuscationPinningTransport.getProtocols()[0] + " tcp" + newLine;
-            }
             switch (transport.getTransportType()) {
                 case OBFS4:
                     return REMOTE + " " + ipAddress + " " + transport.getPorts()[0] + " tcp" + newLine;
@@ -416,9 +394,6 @@ public class VpnConfigGenerator {
     }
 
     public String getRouteString(String ipAddress, Transport transport) {
-        if (useObfuscationPinning) {
-            return "route " + remoteGatewayIP + " 255.255.255.255 net_gateway" + newLine;
-        }
         switch (transport.getTransportType()) {
             case OBFS4:
                 return "route " + ipAddress + " 255.255.255.255 net_gateway" + newLine;

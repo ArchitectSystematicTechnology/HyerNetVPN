@@ -23,6 +23,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import de.blinkt.openvpn.core.connection.Connection;
 import se.leap.bitmaskclient.base.models.Transport;
 import se.leap.bitmaskclient.base.utils.ConfigHelper;
 import se.leap.bitmaskclient.base.utils.ConfigHelper.ObfsVpnHelper;
@@ -77,23 +78,36 @@ public class ObfuscationProxyDialog extends AppCompatDialogFragment {
                     Transport transport = Transport.fromJson(jsonObject);
                     if (transport.getOptions() == null) {
                         errors.add("Missing Bridge Options");
-                    }
-                    if (transport.getOptions() != null &&
-                            (transport.getOptions().getEndpoints() == null || transport.getOptions().getEndpoints().length == 0)) {
-                        errors.add("Cert and IP is missing");
-                    }
-                    if (transport.getOptions() != null && transport.getOptions().getEndpoints() != null) {
-                        for (Transport.Endpoint endpoint : transport.getOptions().getEndpoints()) {
-                            if (endpoint.getIp() == null || endpoint.getIp().isEmpty()) {
-                                errors.add("IP is missing");
-                            } else if (!ConfigHelper.isIPv4(endpoint.getIp())) {
-                                errors.add("Invalid IPv4 address");
+                    } else {
+                        if (transport.getOptions().getEndpoints() == null ||
+                                transport.getOptions().getEndpoints().length == 0) {
+                            errors.add("Cert and IP is missing");
+                        }
+                        int iatMode;
+                        try {
+                            if (transport.getOptions().getIatMode() == null ||
+                                    transport.getOptions().getIatMode().isEmpty()) {
+                                errors.add("iat mode is missing");
+                            } else if ((iatMode = Integer.parseInt(transport.getOptions().getIatMode())) < 0 || (iatMode > 1)) {
+                                errors.add("invalid iat mode (0 or 1)");
                             }
-                            if (endpoint.getCert() == null || endpoint.getCert().isEmpty()) {
-                                errors.add("Cert is missing");
+                        } catch (NumberFormatException nfe) {
+                            errors.add("invalid iat mode (0 or 1)");
+                        }
+                        if (transport.getOptions().getEndpoints() != null) {
+                            for (Transport.Endpoint endpoint : transport.getOptions().getEndpoints()) {
+                                if (endpoint.getIp() == null || endpoint.getIp().isEmpty()) {
+                                    errors.add("IP is missing");
+                                } else if (!ConfigHelper.isIPv4(endpoint.getIp())) {
+                                    errors.add("Invalid IPv4 address");
+                                }
+                                if (endpoint.getCert() == null || endpoint.getCert().isEmpty()) {
+                                    errors.add("Cert is missing");
+                                }
                             }
                         }
                     }
+
                     if (transport.getProtocols() == null || transport.getProtocols().length == 0) {
                         errors.add("missing protocols");
                     }
@@ -105,10 +119,31 @@ public class ObfuscationProxyDialog extends AppCompatDialogFragment {
                     } catch (NullPointerException | IllegalArgumentException e) {}
                     if (!hasValidTransportType) {
                         errors.add("invalid bridge transport type");
-                    } else if (!hasPTAllowedProtocol(transport)) {
-                        errors.add("invalid protocol for transport " + transport.getType());
+                    } else {
+                        if (!hasPTAllowedProtocol(transport)) {
+                            errors.add("invalid protocol for transport " + transport.getType());
+                        }
+                        if (transport.getTransportType() != Connection.TransportType.OBFS4_HOP &&
+                                (transport.getPorts() == null || transport.getPorts().length == 0)) {
+                            errors.add("ports are missing");
+                        } else {
+                            for (String port: transport.getPorts()) {
+                                try {
+                                    int portNumber = Integer.parseInt(port);
+                                    if (portNumber < 1 || portNumber > 65535) {
+                                        errors.add("invalid port number (1-65535)");
+                                    }
+                                } catch (NumberFormatException e) {
+                                    if (port.isEmpty()) {
+                                        errors.add("bridge port value cannot be empty");
+                                    } else {
+                                        errors.add(port + " is an invalid value for bridge ports");
+                                    }
+                                }
+                            }
+                        }
                     }
-                } catch (IllegalStateException | JSONException e) {
+                } catch (Exception e) {
                     errors.add("invalid json format");
                 }
                 StringBuilder stringBuilder = new StringBuilder();
@@ -117,6 +152,7 @@ public class ObfuscationProxyDialog extends AppCompatDialogFragment {
                     int diff = 0;
                     if (i == 2 && (diff = errors.size() - 3) > 0) {
                         stringBuilder.append(diff + " more...");
+                        break;
                     }
                 }
                 validityCheck.setText(stringBuilder.toString());
@@ -124,20 +160,18 @@ public class ObfuscationProxyDialog extends AppCompatDialogFragment {
             }
         });
 
-
-        try {
-            Transport transport = Transport.fromJson(new JSONObject(PreferenceHelper.getObfuscationPinningTransport(getContext())));
+        Transport transport = PreferenceHelper.getObfuscationPinningTransport(getContext(), false);
+        if (transport != null) {
             bridgeConfig.setText(transport.toPrettyPrint());
-        } catch (Exception e) {
-            // eat me
         }
+
         saveButton.setOnClickListener(v -> {
             JSONObject jsonObject = null;
             try {
                 jsonObject = new JSONObject(bridgeConfig.getText().toString());
-                Transport transport = Transport.fromJson(jsonObject);
-                PreferenceHelper.setObfuscationPinningGatewayLocation(v.getContext(), gatewaysManager.getLocationNameForIP(transport.getOptions().getEndpoints()[0].getIp(), v.getContext()));
-                PreferenceHelper.setObufscationPinningTransport(v.getContext(), transport);
+                Transport t = Transport.fromJson(jsonObject);
+                PreferenceHelper.setObfuscationPinningGatewayLocation(v.getContext(), gatewaysManager.getLocationNameForIP(t.getIPFromEndpoints(), v.getContext()));
+                PreferenceHelper.setObfuscationPinningTransport(v.getContext(), t);
             } catch (JSONException | NullPointerException | ArrayIndexOutOfBoundsException e) {}
 
             dismiss();

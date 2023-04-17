@@ -16,7 +16,6 @@
  */
 package se.leap.bitmaskclient.eip;
 
-import static de.blinkt.openvpn.core.connection.Connection.TransportType.OBFS4;
 import static de.blinkt.openvpn.core.connection.Connection.TransportType.PT;
 import static se.leap.bitmaskclient.base.models.Constants.FULLNESS;
 import static se.leap.bitmaskclient.base.models.Constants.HOST;
@@ -30,11 +29,7 @@ import static se.leap.bitmaskclient.base.models.Constants.TIMEZONE;
 import static se.leap.bitmaskclient.base.models.Constants.VERSION;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.allowExperimentalTransports;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getExcludedApps;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningCert;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningGatewayLocation;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningIP;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningKCP;
-import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningPort;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getObfuscationPinningTransport;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getPreferUDP;
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.useObfuscationPinning;
@@ -116,10 +111,10 @@ public class Gateway {
         config.experimentalTransports = allowExperimentalTransports(context);
         config.excludedApps = getExcludedApps(context);
         config.useObfuscationPinning = useObfuscationPinning(context);
-                if (config.useObfuscationPinning) {
+        if (config.useObfuscationPinning) {
             try {
-                Transport transport = Transport.fromJson(new JSONObject(getObfuscationPinningTransport(context)));
-                config.remoteGatewayIP = transport.getOptions().getEndpoints()[0].getIp();
+                Transport transport = getObfuscationPinningTransport(context);
+                config.remoteGatewayIP = transport.getIPFromEndpoints();
                 config.obfuscationProxyTransport = transport;
                 config.profileName = getObfuscationPinningGatewayLocation(context);
             } catch (Exception e) {
