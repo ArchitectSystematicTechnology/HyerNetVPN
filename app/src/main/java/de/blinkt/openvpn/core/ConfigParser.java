@@ -5,9 +5,12 @@
 
 package de.blinkt.openvpn.core;
 
+import static de.blinkt.openvpn.core.connection.Connection.TransportType.PT;
+
 import android.os.Build;
-import androidx.core.util.Pair;
 import android.text.TextUtils;
+
+import androidx.core.util.Pair;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,10 +27,9 @@ import java.util.Vector;
 import de.blinkt.openvpn.VpnProfile;
 import de.blinkt.openvpn.core.connection.Connection;
 import de.blinkt.openvpn.core.connection.Obfs4Connection;
+import de.blinkt.openvpn.core.connection.Obfs4HopConnection;
 import de.blinkt.openvpn.core.connection.OpenvpnConnection;
 import se.leap.bitmaskclient.pluggableTransports.Obfs4Options;
-
-import static de.blinkt.openvpn.core.connection.Connection.TransportType.OBFS4;
 
 //! Openvpn Config FIle Parser, probably not 100% accurate but close enough
 
@@ -561,7 +563,11 @@ public class ConfigParser {
             }
         } else if (!TextUtils.isEmpty(np.mCipher) && !np.mCipher.equals("AES-128-GCM") && !np.mCipher.equals("AES-256"))
         {
-            np.mDataCiphers += "AES-256-GCM:AES-128-GCM:" + np.mCipher;
+            if (np.mCipher.contains("AES-256-GCM")) {
+                np.mDataCiphers += np.mCipher;
+            } else {
+                np.mDataCiphers += "AES-256-GCM:AES-128-GCM:" + np.mCipher;
+            }
         }
 
         Vector<String> auth = getOption("auth", 1, 1);
@@ -802,8 +808,23 @@ public class ConfigParser {
                 e.printStackTrace();
                 return null;
             }
-        else
-            conn = transportType == OBFS4 ? new Obfs4Connection(obfs4Options) : new OpenvpnConnection();
+        else {
+            switch (transportType) {
+                case OBFS4:
+                    conn = new Obfs4Connection(obfs4Options);
+                    break;
+                case OBFS4_HOP:
+                    conn = new Obfs4HopConnection(obfs4Options);
+                    break;
+                case OPENVPN:
+                    conn = new OpenvpnConnection();
+                    break;
+                default:
+                    throw new ConfigParseError("Unexpected transport type: " + transportType);
+
+            }
+
+        }
 
         Vector<String> port = getOption("port", 1, 1);
         if (port != null) {

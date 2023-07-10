@@ -5,6 +5,9 @@
 
 package de.blinkt.openvpn;
 
+import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PROFILE;
+import static se.leap.bitmaskclient.base.utils.ConfigHelper.stringEqual;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -34,8 +37,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -68,10 +69,6 @@ import de.blinkt.openvpn.core.connection.Connection;
 import de.blinkt.openvpn.core.connection.ConnectionAdapter;
 import se.leap.bitmaskclient.BuildConfig;
 import se.leap.bitmaskclient.R;
-
-import static de.blinkt.openvpn.core.connection.Connection.TransportType.OBFS4;
-import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PROFILE;
-import static se.leap.bitmaskclient.base.utils.ConfigHelper.stringEqual;
 
 public class VpnProfile implements Serializable, Cloneable {
     // Note that this class cannot be moved to core where it belongs since
@@ -182,6 +179,7 @@ public class VpnProfile implements Serializable, Cloneable {
     /* Options no longer used in new profiles */
     public String mServerName = "openvpn.example.com";
     public String mServerPort = "1194";
+    @Deprecated
     public boolean mUseUdp = true;
     public boolean mTemporaryProfile = false;
     private transient PrivateKey mPrivateKey;
@@ -191,7 +189,7 @@ public class VpnProfile implements Serializable, Cloneable {
     private int mProfileVersion;
     public boolean mBlockUnusedAddressFamilies = true;
     public String mGatewayIp;
-    public boolean mUsePluggableTransports;
+    private final int mTransportType;
 
     public VpnProfile(String name, Connection.TransportType transportType) {
         mUuid = UUID.randomUUID();
@@ -200,7 +198,7 @@ public class VpnProfile implements Serializable, Cloneable {
 
         mConnections = new Connection[1];
         mLastUsed = System.currentTimeMillis();
-        mUsePluggableTransports = transportType == OBFS4;
+        mTransportType = transportType.toInt();
     }
 
     public static String openVpnEscape(String unescaped) {
@@ -229,7 +227,7 @@ public class VpnProfile implements Serializable, Cloneable {
     //! Put inline data inline and other data as normal escaped filename
     public static String insertFileData(String cfgentry, String filedata) {
         if (filedata == null) {
-            return String.format("%s %s\n", cfgentry, "file missing in config profile");
+            return String.format("# %s %s\n", cfgentry, "file missing in config profile");
         } else if (isEmbedded(filedata)) {
             String dataWithOutHeader = getEmbeddedContent(filedata);
             return String.format(Locale.ENGLISH, "<%s>\n%s\n</%s>\n", cfgentry, dataWithOutHeader, cfgentry);
@@ -266,7 +264,7 @@ public class VpnProfile implements Serializable, Cloneable {
         if (obj instanceof VpnProfile) {
             VpnProfile vp = (VpnProfile) obj;
             return stringEqual(vp.mGatewayIp, mGatewayIp) &&
-                    vp.mUsePluggableTransports == mUsePluggableTransports;
+                    vp.mTransportType == mTransportType;
         }
         return false;
     }
@@ -294,6 +292,15 @@ public class VpnProfile implements Serializable, Cloneable {
     // Only used for the special case of managed profiles
     public void setUUID(UUID uuid) {
         mUuid = uuid;
+    }
+
+    public boolean usePluggableTransports() {
+        Connection.TransportType type = Connection.TransportType.fromInt(mTransportType);
+        return type != null && type.isPluggableTransport();
+    }
+
+    public Connection.TransportType getTransportType() {
+        return Connection.TransportType.fromInt(mTransportType);
     }
 
     public String getName() {
@@ -454,9 +461,6 @@ public class VpnProfile implements Serializable, Cloneable {
                         cfg.append("management-external-key nopadding\n");
                     } else {
                         cfg.append(context.getString(R.string.keychain_access)).append("\n");
-                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN)
-                            if (!mAlias.matches("^[a-zA-Z0-9]$"))
-                                cfg.append(context.getString(R.string.jelly_keystore_alphanumeric_bug)).append("\n");
                     }
                 }
                 break;
@@ -478,7 +482,7 @@ public class VpnProfile implements Serializable, Cloneable {
             cfg.append(insertFileData("crl-verify", mCrlFilename));
 
         // compression does not work in conjunction with shapeshifter-dispatcher so far
-        if (mUseLzo && !mUsePluggableTransports) {
+        if (mUseLzo && !usePluggableTransports()) {
             cfg.append("comp-lzo\n");
         }
 
@@ -913,11 +917,6 @@ public class VpnProfile implements Serializable, Cloneable {
             VpnStatus.logError(R.string.keyChainAccessError, e.getLocalizedMessage());
 
             VpnStatus.logError(R.string.keychain_access);
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN) {
-                if (!mAlias.matches("^[a-zA-Z0-9]$")) {
-                    VpnStatus.logError(R.string.jelly_keystore_alphanumeric_bug);
-                }
-            }
             return null;
 
         } catch (AssertionError e) {
@@ -1177,12 +1176,6 @@ public class VpnProfile implements Serializable, Cloneable {
     private byte[] getKeyChainSignedData(byte[] data, boolean pkcs1padding) {
 
         PrivateKey privkey = getKeystoreKey();
-        // The Jelly Bean *evil* Hack
-        // 4.2 implements the RSA/ECB/PKCS1PADDING in the OpenSSLprovider
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN) {
-            return processSignJellyBeans(privkey, data);
-        }
-
 
         try {
             @SuppressLint("GetInstance")
@@ -1214,32 +1207,6 @@ public class VpnProfile implements Serializable, Cloneable {
             return signed_bytes;
         } catch (NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException
                 | BadPaddingException | NoSuchPaddingException | SignatureException e) {
-            VpnStatus.logError(R.string.error_rsa_sign, e.getClass().toString(), e.getLocalizedMessage());
-            return null;
-        }
-    }
-
-    private byte[] processSignJellyBeans(PrivateKey privkey, byte[] data) {
-        try {
-            Method getKey = privkey.getClass().getSuperclass().getDeclaredMethod("getOpenSSLKey");
-            getKey.setAccessible(true);
-
-            // Real object type is OpenSSLKey
-            Object opensslkey = getKey.invoke(privkey);
-
-            getKey.setAccessible(false);
-
-            Method getPkeyContext = opensslkey.getClass().getDeclaredMethod("getPkeyContext");
-
-            // integer pointer to EVP_pkey
-            getPkeyContext.setAccessible(true);
-            int pkey = (Integer) getPkeyContext.invoke(opensslkey);
-            getPkeyContext.setAccessible(false);
-
-            // 112 with TLS 1.2 (172 back with 4.3), 36 with TLS 1.0
-            return NativeUtils.rsasign(data, pkey);
-
-        } catch (NoSuchMethodException | InvalidKeyException | InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
             VpnStatus.logError(R.string.error_rsa_sign, e.getClass().toString(), e.getLocalizedMessage());
             return null;
         }

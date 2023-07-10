@@ -16,6 +16,25 @@
  */
 package se.leap.bitmaskclient.eip;
 
+import static de.blinkt.openvpn.core.connection.Connection.TransportType.OBFS4;
+import static de.blinkt.openvpn.core.connection.Connection.TransportType.OBFS4_HOP;
+import static de.blinkt.openvpn.core.connection.Connection.TransportType.OPENVPN;
+import static se.leap.bitmaskclient.base.models.Constants.CAPABILITIES;
+import static se.leap.bitmaskclient.base.models.Constants.IP_ADDRESS;
+import static se.leap.bitmaskclient.base.models.Constants.IP_ADDRESS6;
+import static se.leap.bitmaskclient.base.models.Constants.KCP;
+import static se.leap.bitmaskclient.base.models.Constants.PORTS;
+import static se.leap.bitmaskclient.base.models.Constants.PROTOCOLS;
+import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PRIVATE_KEY;
+import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_VPN_CERTIFICATE;
+import static se.leap.bitmaskclient.base.models.Constants.REMOTE;
+import static se.leap.bitmaskclient.base.models.Constants.TCP;
+import static se.leap.bitmaskclient.base.models.Constants.TRANSPORT;
+import static se.leap.bitmaskclient.base.models.Constants.UDP;
+import static se.leap.bitmaskclient.base.utils.ConfigHelper.ObfsVpnHelper.useObfsVpn;
+import static se.leap.bitmaskclient.pluggableTransports.ShapeshifterClient.DISPATCHER_IP;
+import static se.leap.bitmaskclient.pluggableTransports.ShapeshifterClient.DISPATCHER_PORT;
+
 import androidx.annotation.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -25,95 +44,129 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import de.blinkt.openvpn.VpnProfile;
 import de.blinkt.openvpn.core.ConfigParser;
 import de.blinkt.openvpn.core.VpnStatus;
 import de.blinkt.openvpn.core.connection.Connection;
+import de.blinkt.openvpn.core.connection.Connection.TransportType;
 import se.leap.bitmaskclient.base.models.Provider;
+import se.leap.bitmaskclient.base.models.Transport;
 import se.leap.bitmaskclient.base.utils.ConfigHelper;
+import se.leap.bitmaskclient.pluggableTransports.HoppingObfsVpnClient;
 import se.leap.bitmaskclient.pluggableTransports.Obfs4Options;
 
-import static de.blinkt.openvpn.core.connection.Connection.TransportType.OBFS4;
-import static de.blinkt.openvpn.core.connection.Connection.TransportType.OPENVPN;
-import static se.leap.bitmaskclient.base.models.Constants.CAPABILITIES;
-import static se.leap.bitmaskclient.base.models.Constants.IP_ADDRESS;
-import static se.leap.bitmaskclient.base.models.Constants.IP_ADDRESS6;
-import static se.leap.bitmaskclient.base.models.Constants.OPTIONS;
-import static se.leap.bitmaskclient.base.models.Constants.PORTS;
-import static se.leap.bitmaskclient.base.models.Constants.PROTOCOLS;
-import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_PRIVATE_KEY;
-import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_VPN_CERTIFICATE;
-import static se.leap.bitmaskclient.base.models.Constants.REMOTE;
-import static se.leap.bitmaskclient.base.models.Constants.TRANSPORT;
-import static se.leap.bitmaskclient.base.models.Constants.TYPE;
-import static se.leap.bitmaskclient.base.models.Constants.UDP;
-import static se.leap.bitmaskclient.pluggableTransports.Shapeshifter.DISPATCHER_IP;
-import static se.leap.bitmaskclient.pluggableTransports.Shapeshifter.DISPATCHER_PORT;
-
 public class VpnConfigGenerator {
-    private JSONObject generalConfiguration;
-    private JSONObject gateway;
-    private JSONObject secrets;
-    private JSONObject obfs4Transport;
-    private int apiVersion;
-    private boolean preferUDP;
+    private final JSONObject generalConfiguration;
+    private final JSONObject gateway;
+    private final JSONObject secrets;
+    HashMap<TransportType, Transport> transports = new HashMap<>();
+    private final int apiVersion;
+    private final boolean preferUDP;
+    private final boolean experimentalTransports;
+    private final boolean useObfuscationPinning;
+    private final String obfuscationPinningIP;
+    private final String obfuscationPinningPort;
+    private final String obfuscationPinningCert;
+    private final boolean obfuscationPinningKCP;
+    private final String remoteGatewayIP;
+    private final String profileName;
+    private final Set<String> excludedApps;
 
 
     public final static String TAG = VpnConfigGenerator.class.getSimpleName();
     private final String newLine = System.getProperty("line.separator"); // Platform new line
 
-    public VpnConfigGenerator(JSONObject generalConfiguration, JSONObject secrets, JSONObject gateway, int apiVersion, boolean preferUDP) throws ConfigParser.ConfigParseError {
+    public static class Configuration {
+        int apiVersion;
+        boolean preferUDP;
+        boolean experimentalTransports;
+        String remoteGatewayIP = "";
+        String profileName = "";
+        Set<String> excludedApps = null;
+
+        boolean useObfuscationPinning;
+        boolean obfuscationProxyKCP;
+        String obfuscationProxyIP = "";
+        String obfuscationProxyPort = "";
+        String obfuscationProxyCert = "";
+    }
+
+    public VpnConfigGenerator(JSONObject generalConfiguration, JSONObject secrets, JSONObject gateway, Configuration config) throws ConfigParser.ConfigParseError {
         this.generalConfiguration = generalConfiguration;
         this.gateway = gateway;
         this.secrets = secrets;
-        this.apiVersion = apiVersion;
-        this.preferUDP = preferUDP;
+        this.apiVersion = config.apiVersion;
+        this.preferUDP = config.preferUDP;
+        this.experimentalTransports = config.experimentalTransports;
+        this.useObfuscationPinning = config.useObfuscationPinning;
+        this.obfuscationPinningIP = config.obfuscationProxyIP;
+        this.obfuscationPinningPort = config.obfuscationProxyPort;
+        this.obfuscationPinningCert = config.obfuscationProxyCert;
+        this.obfuscationPinningKCP = config.obfuscationProxyKCP;
+        this.remoteGatewayIP = config.remoteGatewayIP;
+        this.profileName = config.profileName;
+        this.excludedApps = config.excludedApps;
         checkCapabilities();
     }
 
     public void checkCapabilities() throws ConfigParser.ConfigParseError {
-
         try {
             if (apiVersion >= 3) {
                 JSONArray supportedTransports = gateway.getJSONObject(CAPABILITIES).getJSONArray(TRANSPORT);
                 for (int i = 0; i < supportedTransports.length(); i++) {
-                    JSONObject transport = supportedTransports.getJSONObject(i);
-                    if (transport.getString(TYPE).equals(OBFS4.toString())) {
-                        obfs4Transport = transport;
-                        break;
-                    }
+                    Transport transport = Transport.fromJson(supportedTransports.getJSONObject(i));
+                    transports.put(transport.getTransportType(), transport);
                 }
             }
-
-        } catch (JSONException e) {
+        } catch (Exception e) {
             throw new ConfigParser.ConfigParseError("Api version ("+ apiVersion +") did not match required JSON fields");
         }
     }
 
-    public HashMap<Connection.TransportType, VpnProfile> generateVpnProfiles() throws
+    public HashMap<TransportType, VpnProfile> generateVpnProfiles() throws
             ConfigParser.ConfigParseError,
-            NumberFormatException,
-            JSONException,
-            IOException {
+            NumberFormatException {
         HashMap<Connection.TransportType, VpnProfile> profiles = new HashMap<>();
-        profiles.put(OPENVPN, createProfile(OPENVPN));
-        if (supportsObfs4()) {
+        if (supportsOpenvpn()) {
             try {
-                profiles.put(OBFS4, createProfile(OBFS4));
+                profiles.put(OPENVPN, createProfile(OPENVPN));
             } catch (ConfigParser.ConfigParseError | NumberFormatException | JSONException | IOException e) {
                 e.printStackTrace();
             }
         }
+        if (apiVersion >= 3) {
+            for (TransportType transportType : transports.keySet()) {
+                Transport transport = transports.get(transportType);
+                if (transportType.isPluggableTransport()) {
+                    Transport.Options transportOptions = transport.getOptions();
+                    if (!experimentalTransports && transportOptions != null && transportOptions.isExperimental()) {
+                        continue;
+                    }
+                    try {
+                        profiles.put(transportType, createProfile(transportType));
+                    } catch (ConfigParser.ConfigParseError | NumberFormatException | JSONException | IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        if (profiles.isEmpty()) {
+            throw new ConfigParser.ConfigParseError("No supported transports detected.");
+        }
         return profiles;
     }
 
-    private boolean supportsObfs4(){
-        return obfs4Transport != null;
+    private boolean supportsOpenvpn() {
+        return !useObfuscationPinning &&
+                ((apiVersion >= 3 && transports.containsKey(OPENVPN)) ||
+                        (apiVersion < 3 && !gatewayConfiguration(OPENVPN).isEmpty()));
     }
 
-    private String getConfigurationString(Connection.TransportType transportType) {
+    private String getConfigurationString(TransportType transportType) {
         return generalConfiguration()
                 + newLine
                 + gatewayConfiguration(transportType)
@@ -124,23 +177,36 @@ public class VpnConfigGenerator {
     }
 
     @VisibleForTesting
-    protected VpnProfile createProfile(Connection.TransportType transportType) throws IOException, ConfigParser.ConfigParseError, JSONException {
+    protected VpnProfile createProfile(TransportType transportType) throws IOException, ConfigParser.ConfigParseError, JSONException {
         String configuration = getConfigurationString(transportType);
         ConfigParser icsOpenvpnConfigParser = new ConfigParser();
         icsOpenvpnConfigParser.parseConfig(new StringReader(configuration));
-        if (transportType == OBFS4) {
-            icsOpenvpnConfigParser.setObfs4Options(getObfs4Options());
+        if (transportType == OBFS4 || transportType == OBFS4_HOP) {
+            icsOpenvpnConfigParser.setObfs4Options(getObfs4Options(transportType));
         }
-        return icsOpenvpnConfigParser.convertProfile(transportType);
+
+        VpnProfile profile = icsOpenvpnConfigParser.convertProfile(transportType);
+        profile.mName = profileName;
+        profile.mGatewayIp = remoteGatewayIP;
+        if (excludedApps != null) {
+            profile.mAllowedAppsVpn = new HashSet<>(excludedApps);
+        }
+        return profile;
     }
 
-    private Obfs4Options getObfs4Options() throws JSONException {
-        JSONObject transportOptions = obfs4Transport.getJSONObject(OPTIONS);
-        String iatMode = transportOptions.getString("iatMode");
-        String cert = transportOptions.getString("cert");
-        String port = obfs4Transport.getJSONArray(PORTS).getString(0);
+    private Obfs4Options getObfs4Options(TransportType transportType) throws JSONException {
         String ip = gateway.getString(IP_ADDRESS);
-        return new Obfs4Options(ip, port, cert, iatMode);
+        Transport transport;
+        if (useObfuscationPinning) {
+            transport = new Transport(OBFS4.toString(),
+                    new String[]{obfuscationPinningKCP ? KCP : TCP},
+                    new String[]{obfuscationPinningPort},
+                    obfuscationPinningCert);
+            ip = obfuscationPinningIP;
+        } else {
+            transport = transports.get(transportType);
+        }
+        return new Obfs4Options(ip, transport);
     }
 
     private String generalConfiguration() {
@@ -166,8 +232,8 @@ public class VpnConfigGenerator {
         return commonOptions;
     }
 
-    private String gatewayConfiguration(Connection.TransportType transportType) {
-        String remotes = "";
+    private String gatewayConfiguration(TransportType transportType) {
+        String configs = "";
 
         StringBuilder stringBuilder = new StringBuilder();
         try {
@@ -187,8 +253,8 @@ public class VpnConfigGenerator {
                     String[] ipAddresses = ipAddress6.isEmpty()  ?
                             new String[]{ipAddress} :
                             new String[]{ipAddress6, ipAddress};
-                    JSONArray transports = capabilities.getJSONArray(TRANSPORT);
-                    gatewayConfigMinApiv3(transportType, stringBuilder, ipAddresses, transports);
+
+                    gatewayConfigMinApiv3(transportType, stringBuilder, ipAddresses);
                     break;
             }
         } catch (JSONException e) {
@@ -196,19 +262,19 @@ public class VpnConfigGenerator {
             e.printStackTrace();
         }
 
-        remotes = stringBuilder.toString();
-        if (remotes.endsWith(newLine)) {
-            remotes = remotes.substring(0, remotes.lastIndexOf(newLine));
+        configs = stringBuilder.toString();
+        if (configs.endsWith(newLine)) {
+            configs = configs.substring(0, configs.lastIndexOf(newLine));
         }
 
-        return remotes;
+        return configs;
     }
 
-    private void gatewayConfigMinApiv3(Connection.TransportType transportType, StringBuilder stringBuilder, String[] ipAddresses, JSONArray transports) throws JSONException {
-        if (transportType == OBFS4) {
-            obfs4GatewayConfigMinApiv3(stringBuilder, ipAddresses, transports);
+    private void gatewayConfigMinApiv3(TransportType transportType, StringBuilder stringBuilder, String[] ipAddresses) throws JSONException {
+        if (transportType.isPluggableTransport()) {
+            ptGatewayConfigMinApiv3(stringBuilder, ipAddresses, transports.get(transportType));
         } else {
-            ovpnGatewayConfigMinApi3(stringBuilder, ipAddresses, transports);
+            ovpnGatewayConfigMinApi3(stringBuilder, ipAddresses, transports.get(OPENVPN));
         }
     }
 
@@ -227,19 +293,16 @@ public class VpnConfigGenerator {
         }
     }
 
-    private void ovpnGatewayConfigMinApi3(StringBuilder stringBuilder, String[] ipAddresses, JSONArray transports) throws JSONException {
-        String port;
-        String protocol;
-        JSONObject openvpnTransport = getTransport(transports, OPENVPN);
-        JSONArray ports = openvpnTransport.getJSONArray(PORTS);
-        JSONArray protocols = openvpnTransport.getJSONArray(PROTOCOLS);
+    private void ovpnGatewayConfigMinApi3(StringBuilder stringBuilder, String[] ipAddresses, Transport transport) {
+        if (transport.getProtocols() == null || transport.getPorts() == null) {
+            VpnStatus.logError("Misconfigured provider: missing details for transport openvpn on gateway " + ipAddresses[0]);
+            return;
+        }
         if (preferUDP) {
             StringBuilder udpRemotes = new StringBuilder();
             StringBuilder tcpRemotes = new StringBuilder();
-            for (int i = 0; i < protocols.length(); i++) {
-                protocol = protocols.optString(i);
-                for (int j = 0; j < ports.length(); j++) {
-                    port = ports.optString(j);
+            for (String protocol : transport.getProtocols()) {
+                for (String port : transport.getPorts()) {
                     for (String ipAddress : ipAddresses) {
                         String newRemote = REMOTE + " " + ipAddress + " " + port + " " + protocol + newLine;
                         if (UDP.equals(protocol)) {
@@ -253,10 +316,8 @@ public class VpnConfigGenerator {
             stringBuilder.append(udpRemotes.toString());
             stringBuilder.append(tcpRemotes.toString());
         } else {
-            for (int j = 0; j < ports.length(); j++) {
-                port = ports.getString(j);
-                for (int k = 0; k < protocols.length(); k++) {
-                    protocol = protocols.optString(k);
+            for (String protocol : transport.getProtocols()) {
+                for (String port : transport.getPorts()) {
                     for (String ipAddress : ipAddresses) {
                         String newRemote = REMOTE + " " + ipAddress + " " + port + " " + protocol + newLine;
                         stringBuilder.append(newRemote);
@@ -266,21 +327,19 @@ public class VpnConfigGenerator {
         }
     }
 
-    private JSONObject getTransport(JSONArray transports, Connection.TransportType transportType) throws JSONException {
-        JSONObject selectedTransport = new JSONObject();
-        for (int i = 0; i < transports.length(); i++) {
-            JSONObject transport = transports.getJSONObject(i);
-            if (transport.getString(TYPE).equals(transportType.toString())) {
-                selectedTransport = transport;
-                break;
-            }
+    private boolean isAllowedProtocol(TransportType transportType, String protocol) {
+        switch (transportType) {
+            case OPENVPN:
+                return TCP.equals(protocol) || UDP.equals(protocol);
+            case OBFS4_HOP:
+            case OBFS4:
+                return TCP.equals(protocol) || KCP.equals(protocol);
         }
-        return selectedTransport;
+        return false;
     }
 
-    private void obfs4GatewayConfigMinApiv3(StringBuilder stringBuilder, String[] ipAddresses, JSONArray transports) throws JSONException {
-        JSONObject obfs4Transport = getTransport(transports, OBFS4);
-        JSONArray protocols = obfs4Transport.getJSONArray(PROTOCOLS);
+    private void ptGatewayConfigMinApiv3(StringBuilder stringBuilder, String[] ipAddresses, Transport transport) {
+
         //for now only use ipv4 gateway the syntax route remote_host 255.255.255.255 net_gateway is not yet working
         // https://community.openvpn.net/openvpn/ticket/1161
         /*for (String ipAddress : ipAddresses) {
@@ -303,28 +362,123 @@ public class VpnConfigGenerator {
         }
 
         if (ipAddress == null) {
-            VpnStatus.logError("No matching IPv4 address found to configure obfs4.");
+            VpnStatus.logError("Misconfigured provider: No matching IPv4 address found to configure obfs4.");
             return;
         }
 
-        // check if at least one protocol is TCP, UDP is currently not supported for obfs4
-        boolean hasTcp = false;
-        for (int i = 0; i < protocols.length(); i++) {
-            String protocol = protocols.getString(i);
-            if (protocol.contains("tcp")) {
-                hasTcp = true;
+        if (!openvpnModeSupportsPt(transport, ipAddress) || !hasPTAllowedProtocol(transport, ipAddress)) {
+            return;
+        }
+
+        TransportType transportType = transport.getTransportType();
+        if (transportType == OBFS4 && (transport.getPorts() == null || transport.getPorts().length == 0)) {
+            VpnStatus.logError("Misconfigured provider: no ports defined in " + transport.getType() + " transport JSON for gateway " + ipAddress);
+            return;
+        }
+
+        if (transportType == OBFS4_HOP &&
+                (transport.getOptions() == null ||
+                        (transport.getOptions().getEndpoints() == null && transport.getOptions().getCert() == null) ||
+                        transport.getOptions().getPortCount() == 0)) {
+            VpnStatus.logError("Misconfigured provider: missing properties for transport " + transport.getType() + " on gateway " + ipAddress);
+            return;
+        }
+
+        stringBuilder.append(getRouteString(ipAddress, transport));
+        stringBuilder.append(getRemoteString(ipAddress, transport));
+        stringBuilder.append(getExtraOptions(transport));
+    }
+
+    public String getRemoteString(String ipAddress, Transport transport) {
+        if (useObfsVpn()) {
+            if (useObfuscationPinning) {
+                return REMOTE + " " + obfuscationPinningIP + " " + obfuscationPinningPort + " tcp" + newLine;
+            }
+            switch (transport.getTransportType()) {
+                case OBFS4:
+                    return REMOTE + " " + ipAddress + " " + transport.getPorts()[0] + " tcp" + newLine;
+                case OBFS4_HOP:
+                    return REMOTE + " " + HoppingObfsVpnClient.IP + " " + HoppingObfsVpnClient.PORT + " udp" + newLine;
+                default:
+                    VpnStatus.logError("Unexpected pluggable transport type " + transport.getType() + " for gateway " + ipAddress);
+                    return "";
+            }
+        }
+        return REMOTE + " " + DISPATCHER_IP + " " + DISPATCHER_PORT + " tcp" + newLine;
+    }
+
+    public String getExtraOptions(Transport transport) {
+        if (transport.getTransportType() == OBFS4_HOP) {
+            return "replay-window 65535" + newLine +
+                    "ping-restart 300" + newLine +
+                    "tun-mtu 48000" + newLine;
+        }
+        return "";
+    }
+
+    public String getRouteString(String ipAddress, Transport transport) {
+        if (useObfuscationPinning) {
+            return "route " + obfuscationPinningIP + " 255.255.255.255 net_gateway" + newLine;
+        }
+        switch (transport.getTransportType()) {
+            case OBFS4:
+                return "route " + ipAddress + " 255.255.255.255 net_gateway" + newLine;
+            case OBFS4_HOP:
+                if (transport.getOptions().getEndpoints() != null)  {
+                    StringBuilder routes = new StringBuilder();
+                    for (Transport.Endpoint endpoint : transport.getOptions().getEndpoints()) {
+                        routes.append("route " + endpoint.getIp() + " 255.255.255.255 net_gateway" + newLine);
+                    }
+                    return routes.toString();
+                } else {
+                    return "route " + ipAddress + " 255.255.255.255 net_gateway" + newLine;
+                }
+        }
+
+        return "";
+    }
+
+    // While openvpn in TCP mode is required for obfs4, openvpn in UDP mode is required for obfs4-hop
+    private boolean openvpnModeSupportsPt(Transport transport, String ipAddress) {
+        if (useObfuscationPinning) {
+            // we don't know if the manually pinned bridge points to a openvpn gateway with the right
+            // configuration, so we assume yes
+            return true;
+        }
+        Transport openvpnTransport = transports.get(OPENVPN);
+        if (openvpnTransport == null) {
+            // the bridge seems to be to be decoupled from the gateway, we can't say if the openvpn gateway
+            // will support this PT and hope the admins configured the gateway correctly
+            return true;
+        }
+
+        String[] protocols = openvpnTransport.getProtocols();
+        if (protocols == null) {
+            VpnStatus.logError("Misconfigured provider: Protocol array is missing for openvpn gateway " + ipAddress);
+            return false;
+        }
+
+        String requiredProtocol = transport.getTransportType() == OBFS4_HOP ? UDP : TCP;
+        for (String protocol : protocols) {
+            if (protocol.equals(requiredProtocol)) {
+                return true;
             }
         }
 
-        if (!hasTcp) {
-            VpnStatus.logError("obfs4 currently only allows TCP! Skipping obfs4 config for ip " + ipAddress);
-            return;
+        VpnStatus.logError("Misconfigured provider: " + transport.getTransportType().toString() + " currently only allows openvpn in " + requiredProtocol + " mode! Skipping config for ip " + ipAddress);
+        return false;
+    }
+
+    private boolean hasPTAllowedProtocol(Transport transport, String ipAddress) {
+        String[] ptProtocols = transport.getProtocols();
+        for (String protocol : ptProtocols) {
+            if (isAllowedProtocol(transport.getTransportType(), protocol)) {
+                return true;
+            }
         }
 
-        String route = "route " + ipAddress + " 255.255.255.255 net_gateway" + newLine;
-        stringBuilder.append(route);
-        String remote = REMOTE + " " + DISPATCHER_IP + " " + DISPATCHER_PORT + " tcp" + newLine;
-        stringBuilder.append(remote);
+        VpnStatus.logError("Misconfigured provider: wrong protocol defined in  " + transport.getType() + " transport JSON for gateway " + ipAddress);
+        return false;
     }
 
     private String secretsConfiguration() {
