@@ -17,6 +17,9 @@
 package se.leap.bitmaskclient.base.utils;
 
 import static se.leap.bitmaskclient.base.models.Constants.DEFAULT_BITMASK;
+import static se.leap.bitmaskclient.base.models.Constants.KCP;
+import static se.leap.bitmaskclient.base.models.Constants.TCP;
+import static se.leap.bitmaskclient.base.models.Constants.UDP;
 
 import android.app.PendingIntent;
 import android.content.Context;
@@ -52,9 +55,12 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import de.blinkt.openvpn.core.VpnStatus;
+import de.blinkt.openvpn.core.connection.Connection;
 import okhttp3.internal.publicsuffix.PublicSuffixDatabase;
 import se.leap.bitmaskclient.BuildConfig;
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.base.models.Transport;
 import se.leap.bitmaskclient.providersetup.ProviderAPI;
 
 /**
@@ -320,5 +326,29 @@ public class ConfigHelper {
             flags |= PendingIntent.FLAG_IMMUTABLE;
         }
         return flags;
+    }
+
+    public static boolean hasPTAllowedProtocol(Transport transport) {
+        String[] ptProtocols = transport.getProtocols();
+        if (ptProtocols != null) {
+            for (String protocol : ptProtocols) {
+                if (isAllowedProtocol(transport.getTransportType(), protocol)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean isAllowedProtocol(Connection.TransportType transportType, String protocol) {
+        switch (transportType) {
+            case OPENVPN:
+                return TCP.equals(protocol) || UDP.equals(protocol);
+            case OBFS4_HOP:
+            case OBFS4:
+                return TCP.equals(protocol) || KCP.equals(protocol);
+        }
+        return false;
     }
 }

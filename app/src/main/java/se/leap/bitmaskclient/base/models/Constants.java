@@ -46,6 +46,7 @@ public interface Constants {
     String GATEWAY_PINNING = "gateway_pinning";
     String ALLOW_EXPERIMENTAL_TRANSPORTS = "allow_experimental_transports";
     String USE_OBFUSCATION_PINNING = "use_obfuscation_pinning";
+    String OBFUSCATION_PINNING_TRANSPORT = "obfuscation_pinning_transport";
     String OBFUSCATION_PINNING_IP = "obfuscation_pinning_ip";
     String OBFUSCATION_PINNING_PORT = "obfuscation_pinning_port";
     String OBFUSCATION_PINNING_CERT = "obfuscation_pinning_cert";

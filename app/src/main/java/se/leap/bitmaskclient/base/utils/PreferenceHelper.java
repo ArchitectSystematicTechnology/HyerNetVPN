@@ -16,6 +16,7 @@ import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_IP
 import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_KCP;
 import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_LOCATION;
 import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_PORT;
+import static se.leap.bitmaskclient.base.models.Constants.OBFUSCATION_PINNING_TRANSPORT;
 import static se.leap.bitmaskclient.base.models.Constants.PREFERRED_CITY;
 import static se.leap.bitmaskclient.base.models.Constants.PREFER_UDP;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_CONFIGURED;
@@ -36,7 +37,6 @@ import static se.leap.bitmaskclient.base.models.Constants.USE_SNOWFLAKE;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
@@ -50,8 +50,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import de.blinkt.openvpn.VpnProfile;
+import de.blinkt.openvpn.core.connection.Connection;
 import se.leap.bitmaskclient.BuildConfig;
 import se.leap.bitmaskclient.base.models.Provider;
+import se.leap.bitmaskclient.base.models.Transport;
 import se.leap.bitmaskclient.tor.TorStatusObservable;
 
 /**
@@ -327,9 +329,32 @@ public class PreferenceHelper {
         return ConfigHelper.ObfsVpnHelper.useObfsVpn() &&
                 getUseBridges(context) &&
                 getBoolean(context, USE_OBFUSCATION_PINNING, false) &&
-                !TextUtils.isEmpty(getObfuscationPinningIP(context)) &&
-                !TextUtils.isEmpty(getObfuscationPinningCert(context)) &&
-                !TextUtils.isEmpty(getObfuscationPinningPort(context));
+                getObfuscationPinningTransport(context) != null;
+    }
+
+    public static void setObfuscationPinningTransport(Context context, Transport transport) {
+        putString(context, OBFUSCATION_PINNING_TRANSPORT, transport.toString());
+    }
+
+    public static Transport getObfuscationPinningTransport(Context context) {
+        return getObfuscationPinningTransport(context, true);
+    }
+
+    public static Transport getObfuscationPinningTransport(Context context, boolean compatFix) {
+        try {
+            String transportString = getString(context, OBFUSCATION_PINNING_TRANSPORT, null);
+            if (transportString != null) {
+                Transport transport = Transport.fromJson(new JSONObject(getString(context, OBFUSCATION_PINNING_TRANSPORT, null)));
+                // compatibility hack...
+                if (compatFix && transport.getTransportType() == Connection.TransportType.OBFS4) {
+                    transport.getOptions().setCert(transport.getCertFromEndpoints());
+                }
+                return transport;
+            }
+        } catch (JSONException | NullPointerException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static void setObfuscationPinningIP(Context context, String ip) {

@@ -59,6 +59,25 @@ public class Transport implements Serializable {
         return new Gson().toJson(this);
     }
 
+    public String toPrettyPrint() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
+
+    public @Nullable String getIPFromEndpoints() {
+        if (options == null || options.endpoints == null || options.endpoints.length == 0) {
+            return null;
+        }
+        return options.endpoints[0].ip;
+    }
+
+    public @Nullable String getCertFromEndpoints() {
+        if (options == null || options.endpoints == null || options.endpoints.length == 0) {
+            return null;
+        }
+        return options.endpoints[0].cert;
+    }
+
     public static Transport fromJson(JSONObject json) {
         GsonBuilder builder = new GsonBuilder();
         return builder.
@@ -105,6 +124,10 @@ public class Transport implements Serializable {
         @Nullable
         public String getCert() {
             return cert;
+        }
+
+        public void setCert(@Nullable String cert) {
+            this.cert = cert;
         }
 
         public String getIatMode() {
