@@ -18,7 +18,6 @@ import android.content.Context;
 import android.content.Intent;
 
 import androidx.test.espresso.ViewInteraction;
-import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -27,16 +26,13 @@ import androidx.test.uiautomator.UiDevice;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
-import se.leap.bitmaskclient.base.MainActivity;
 import se.leap.bitmaskclient.base.StartActivity;
 import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.base.models.ProviderObservable;
-import se.leap.bitmaskclient.base.utils.PreferenceHelper;
 import se.leap.bitmaskclient.providersetup.activities.SetupActivity;
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.UiAutomatorScreenshotStrategy;
@@ -46,7 +42,7 @@ import utils.ProviderSetupUtils;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class ProviderSetupTest {
+public class ProviderSetupFailureTest {
 
     @ClassRule
     public static final LocaleTestRule localeTestRule = new LocaleTestRule();
@@ -68,29 +64,29 @@ public class ProviderSetupTest {
     }
 
     @Test
-    public void test01_setupProviderDefault() {
-        startSetupActivity();
-        ProviderSetupUtils.runProviderSetup(device, true, false, InstrumentationRegistry.getInstrumentation().getTargetContext());
-    }
-
-    @Test
-    public void test02_setupProviderCircumvention() {
-        startSetupActivity();
-        ProviderSetupUtils.runProviderSetup(device, true, true, InstrumentationRegistry.getInstrumentation().getTargetContext());
-    }
-    @Test
-    public void test03_addManuallyNewProviderScreenshot() {
+    public void test01_addManuallyNewProviderScreenshot() {
         if (!"normal".equals(BuildConfig.FLAVOR_branding)) {
             System.out.println("skipping custom provider url test");
             return;
         }
         startSetupActivity();
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         ViewInteraction radioButtonSelection = tryResolve(onView(withText(R.string.add_provider)), matches(isDisplayed()));
         radioButtonSelection.perform(click());
         onView(withId(R.id.edit_customProvider)).perform(replaceText("https://leapvpn.myserver.org"));
         tryResolve(onView(withId(R.id.edit_customProvider)), matches(withText("https://leapvpn.myserver.org")));
-        Screengrab.screenshot("10_setup_custom_provider");
+        Screengrab.screenshot("20_setup_custom_provider");
+        onView(withId(R.id.setup_next_button)).perform(click());
+
+        onView(withText(context.getString(R.string.use_standard_vpn, context.getString(R.string.app_name)))).perform(click());
+        onView(withId(R.id.setup_next_button)).perform(click());
+
+        tryResolve(
+                onView(withText(context.getString(R.string.malformed_url, context.getString(R.string.app_name)))),
+                matches(isDisplayed()),
+                20);
+        Screengrab.screenshot("21_setup_provider_error_dialog");
     }
 
     private void startSetupActivity() {

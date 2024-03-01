@@ -35,7 +35,7 @@ public class ProviderSetupUtils {
             if ("normal".equals(BuildConfig.FLAVOR_branding)) {
                 System.out.println("next: provider selection");
                 ViewInteraction radioButtonSelection = tryResolve(onView(withText("Riseup")), matches(isDisplayed()));
-                if (takeConfigurationScreenshots) Screengrab.screenshot("provider_selection");
+                if (takeConfigurationScreenshots) Screengrab.screenshot("10_provider_selection");
                 radioButtonSelection.perform(click());
                 // next button click
                 onView(withText(R.string.next)).perform(click());
@@ -48,7 +48,7 @@ public class ProviderSetupUtils {
             } else {
                 onView(withText(targetContext.getString(R.string.use_standard_vpn, targetContext.getString(R.string.app_name)))).perform(click());
             }
-            if (takeConfigurationScreenshots) Screengrab.screenshot("circumvention_selection");
+            if (takeConfigurationScreenshots) Screengrab.screenshot("11_circumvention_selection");
 
             // ------- CONFIGURATION PROGRESS --------------
             System.out.println("next: configuring");
@@ -62,7 +62,7 @@ public class ProviderSetupUtils {
                     ),
                     matches(isDisplayed())
             );
-            if (takeConfigurationScreenshots) Screengrab.screenshot("configuring_provider");
+            if (takeConfigurationScreenshots) Screengrab.screenshot("12_configuring_provider");
 
             // ------- VPN PERMISSON DIALOG --------------
             boolean showPermissionDialog = false;
@@ -70,7 +70,7 @@ public class ProviderSetupUtils {
                 showPermissionDialog = true;
                 tryResolve(onView(withText(R.string.upcoming_connection_request_description)), matches(isDisplayed()), useCircumvention ? 180 : 20);
                 System.out.println("next: next permission request");
-                if (takeConfigurationScreenshots) Screengrab.screenshot("vpn_permission_rationale");
+                if (takeConfigurationScreenshots) Screengrab.screenshot("13_vpn_permission_rationale");
                 onView(withText(R.string.next)).perform(click());
                 UiObject okButton = device.findObject(new UiSelector().packageName("com.android.vpndialogs").resourceId("android:id/button1"));
                 okButton.waitForExists(30000);
@@ -82,7 +82,7 @@ public class ProviderSetupUtils {
             System.out.println("next: perform click on VPN button");
             ViewInteraction interaction = tryResolve(onView(withTagValue(Matchers.is("button_setup_circle_custom"))), matches(isDisplayed()), useCircumvention && !showPermissionDialog ? 180 : 20);
             if (takeConfigurationScreenshots) {
-                Screengrab.screenshot("all_set_start_vpn");
+                Screengrab.screenshot("14_all_set_start_vpn");
             } else {
                 // we only want to start the VPN in case we're not running the ProviderSetupTest
                 interaction.perform(click());

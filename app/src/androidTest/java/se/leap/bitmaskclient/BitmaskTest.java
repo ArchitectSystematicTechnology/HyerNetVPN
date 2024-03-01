@@ -66,23 +66,23 @@ public class BitmaskTest {
     public void test01_vpnStartTest() throws InterruptedException, UiObjectNotFoundException {
         startMainActivity();
 
-        Screengrab.screenshot("VPN_connecting");
+        Screengrab.screenshot("02_VPN_connecting");
         ViewInteraction mainButtonStop = CustomInteractions.tryResolve(
                 Espresso.onView(Matchers.allOf(
                         ViewMatchers.withId(R.id.button),
                         ViewMatchers.withTagValue(Matchers.is("button_circle_stop")))),
                 ViewAssertions.matches(ViewMatchers.isDisplayed()),
                 20);
-        Screengrab.screenshot("VPN_connected");
+        Screengrab.screenshot("01_VPN_connected");
 
         mainButtonStop.perform(ViewActions.click());
-        Screengrab.screenshot("VPN_ask_disconnect");
+        Screengrab.screenshot("03_VPN_ask_disconnect");
 
         Espresso.onView(ViewMatchers.withText(android.R.string.yes))
                 .inRoot(RootMatchers.isDialog())
                 .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
                 .perform(ViewActions.click());
-        Screengrab.screenshot("VPN_disconnected");
+        Screengrab.screenshot("04_VPN_disconnected");
     }
 
     @Test
@@ -92,13 +92,13 @@ public class BitmaskTest {
                 .check(ViewAssertions.matches(DrawerMatchers.isClosed(Gravity.LEFT))) // Left Drawer should be closed.
                 .perform(DrawerActions.open()); // Open Drawer
 
-        Screengrab.screenshot("navigationDrawer");
+        Screengrab.screenshot("05_navigationDrawer");
 
         // Start the screen of your activity.
         Espresso.onView(ViewMatchers.withId(R.id.advancedSettings))
                 .perform(ViewActions.click());
 
-        Screengrab.screenshot("settingsFragment");
+        Screengrab.screenshot("06_settingsFragment");
     }
 
     @Test
@@ -111,7 +111,7 @@ public class BitmaskTest {
         Espresso.onView(ViewMatchers.withId(R.id.manualGatewaySelection))
                 .perform(ViewActions.click());
 
-        Screengrab.screenshot("GatewaySelectionFragment");
+        Screengrab.screenshot("07_GatewaySelectionFragment");
     }
 
     @Test
@@ -130,7 +130,7 @@ public class BitmaskTest {
                 ViewAssertions.matches(ViewMatchers.isDisplayed()),
                 5);
 
-        Screengrab.screenshot("App_Exclusion_Fragment");
+        Screengrab.screenshot("08_App_Exclusion_Fragment");
     }
 
     private void startMainActivity() {
