@@ -32,6 +32,8 @@ SCRIPT_DIR=$(dirname "$0")
 BASE_DIR="$SCRIPT_DIR/.."
 
 cd $BASE_DIR
+apt update && apt upgrade && apt install locales-all && locale-gen en_US.UTF-8
+
 setHeadsupNotifications 0
 if [[ -z $BUILD_CUSTOM ]]; then
    echo -e "${GREEN}--     Screenshotting Bitmask       ---${NC}"
