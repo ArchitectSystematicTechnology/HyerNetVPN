@@ -173,7 +173,8 @@ build_double_beta_releases:
   image: "0xacab.org:4567/leap/bitmask_android/android-ndk:latest"
   stage: build
   script:
-    - ./scripts/prepareForDistribution.sh build -allflavors -apk fat -no-tag -beta >> webBetaRelease.log 2>&1
+    - ./scripts/prepareForDistribution.sh build -allflavors -apk fat -no-tag -beta 2>&1 |
+      tee >(tail -n 500 logfile.tmp && mv logfile.log )
     - ./scripts/prepareForDistribution.sh build -allflavors -aab -no-tag >> gplayBetaRelease.log 2>&1
   artifacts:
     paths:
