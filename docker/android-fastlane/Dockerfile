@@ -16,7 +16,7 @@ RUN lsb_release -a
 
 RUN apt-get update -qq && \
     apt-get -y dist-upgrade && \
-    apt-get -y install gnupg apt-transport-https
+    apt-get -y install gnupg apt-transport-https locales-all
 
 # Docker apt details should be inherited from android_sdk
 #RUN curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
