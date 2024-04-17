@@ -14,6 +14,7 @@ variables:
   image: 0xacab.org:4567/leap/docker/debian:bullseye_amd64
   tags:
     - docker-in-docker
+    - runner02-sea
   services:
     - docker:dind
 
@@ -81,6 +82,7 @@ screenshot:
   variables:
     LC_ALL: "en_US.UTF-8"
     LANG: "en_US.UTF-8"
+
     ANDROID_EMULATOR_USE_SYSTEM_LIBS: 1
     DEBIAN_FRONTEN: "noninteractive"
 # try to re-use the build artifcats from before, lib building is slow
@@ -88,6 +90,7 @@ screenshot:
     - build
   script:
     - ./scripts/installFastlane.sh
+    - cat /etc/default/locale; /usr/bin/locale
     - ./scripts/startEmulators.sh
     - ./scripts/fastlane.sh
     - ./scripts/fastlane.sh custom
@@ -147,6 +150,8 @@ build:
     untracked: true
     paths:
     - app/build/outputs/
+    # it's required to pass tor builds to screenshot step
+    - tor-android/tor-android-binary/build/
     - build_deps.log
     - build.log
     when: always
@@ -166,6 +171,23 @@ build_double_release:
     expire_in: 1 week
   when: manual
 
+build_double_beta_releases:
+  image: "0xacab.org:4567/leap/bitmask_android/android-ndk:latest"
+  stage: build
+  script:
+    - ./scripts/prepareForDistribution.sh build -allflavors -apk fat -no-tag -beta >> webBetaRelease.log 2>&1
+    - ./scripts/prepareForDistribution.sh build -allflavors -aab -no-tag >> gplayBetaRelease.log 2>&1
+  artifacts:
+    paths:
+      - app/build/outputs/
+      - currentReleases/
+      - webBetaRelease.log
+      - gplayBetaRelease.log
+    when: always
+    expire_in: 1 week
+  when: manual
+
+
 build_release:
   image: "0xacab.org:4567/leap/bitmask_android/android-ndk:latest"
   stage: build
@@ -184,7 +206,7 @@ build_fdroid_beta_release:
   image: "0xacab.org:4567/leap/bitmask_android/android-ndk:latest"
   stage: build
   script:
-    - ./scripts/prepareForDistribution.sh build -no-tag -beta >> normalBeta.log 2>&1
+    - ./scripts/prepareForDistribution.sh build -no-tag -beta 2>&1 | tee normalBeta.log
   artifacts:
     paths:
       - app/build/outputs/
