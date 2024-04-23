@@ -89,7 +89,7 @@ public class ProviderApiConnector {
 
         @Override
         public String requestStringFromServer(@NonNull String url, @NonNull String requestMethod, String jsonString, @NonNull List<Pair<String, String>> headerArgs, @NonNull OkHttpClient okHttpClient) throws RuntimeException, IOException {
-            RequestBody jsonBody = jsonString != null ? RequestBody.create(JSON, jsonString) : null;
+            RequestBody jsonBody = jsonString != null ? RequestBody.create(jsonString, JSON) : null;
             Request.Builder requestBuilder = new Request.Builder()
                     .url(url)
                     .method(requestMethod, jsonBody);
