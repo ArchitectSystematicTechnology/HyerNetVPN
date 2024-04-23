@@ -30,9 +30,6 @@ import static se.leap.bitmaskclient.base.models.Constants.REMOTE;
 import static se.leap.bitmaskclient.base.models.Constants.TCP;
 import static se.leap.bitmaskclient.base.models.Constants.TRANSPORT;
 import static se.leap.bitmaskclient.base.models.Constants.UDP;
-import static se.leap.bitmaskclient.base.utils.BuildConfigHelper.useObfsVpn;
-import static se.leap.bitmaskclient.pluggableTransports.ShapeshifterClient.DISPATCHER_IP;
-import static se.leap.bitmaskclient.pluggableTransports.ShapeshifterClient.DISPATCHER_PORT;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -389,21 +386,19 @@ public class VpnConfigGenerator {
     }
 
     public String getRemoteString(String ipAddress, Transport transport) {
-        if (useObfsVpn()) {
-            if (useObfuscationPinning) {
-                return REMOTE + " " + obfuscationPinningIP + " " + obfuscationPinningPort + " tcp" + newLine;
-            }
-            switch (transport.getTransportType()) {
-                case OBFS4:
-                    return REMOTE + " " + ipAddress + " " + transport.getPorts()[0] + " tcp" + newLine;
-                case OBFS4_HOP:
-                    return REMOTE + " " + HoppingObfsVpnClient.IP + " " + HoppingObfsVpnClient.PORT + " udp" + newLine;
-                default:
-                    VpnStatus.logError("Unexpected pluggable transport type " + transport.getType() + " for gateway " + ipAddress);
-                    return "";
-            }
+        if (useObfuscationPinning) {
+            return REMOTE + " " + obfuscationPinningIP + " " + obfuscationPinningPort + " tcp" + newLine;
         }
-        return REMOTE + " " + DISPATCHER_IP + " " + DISPATCHER_PORT + " tcp" + newLine;
+        switch (transport.getTransportType()) {
+            case OBFS4:
+                return REMOTE + " " + ipAddress + " " + transport.getPorts()[0] + " tcp" + newLine;
+            case OBFS4_HOP:
+                return REMOTE + " " + HoppingObfsVpnClient.IP + " " + HoppingObfsVpnClient.PORT + " udp" + newLine;
+            default:
+                VpnStatus.logError("Unexpected pluggable transport type " + transport.getType() + " for gateway " + ipAddress);
+                return "";
+        }
+
     }
 
     public String getExtraOptions(Transport transport) {

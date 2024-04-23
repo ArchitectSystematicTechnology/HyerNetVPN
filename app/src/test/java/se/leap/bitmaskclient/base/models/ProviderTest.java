@@ -20,7 +20,7 @@ public class ProviderTest {
 
     @Before
     public void setup() {
-        BuildConfigHelper buildConfigHelper = MockHelper.mockBuildConfigHelper(false);
+        BuildConfigHelper buildConfigHelper = MockHelper.mockBuildConfigHelper(true);
     }
 
     @Test
@@ -115,20 +115,6 @@ public class ProviderTest {
                 "ptdemo_kcp_gateways.json",
                 null);
         assertTrue(p1.supportsExperimentalPluggableTransports());
-    }
-
-    @Test
-    public void testSupportsPluggableTransports_Obfs4Kcp_noObsvpn_returnsFalse() throws Exception {
-        Provider p1 = TestSetupHelper.getProvider(
-                "https://pt.demo.bitmask.net",
-                null,
-                null,
-                null,
-                null,
-                null,
-                "ptdemo_only_experimental_transports_gateways.json",
-                null);
-        assertFalse(p1.supportsPluggableTransports());
     }
 
     @Test

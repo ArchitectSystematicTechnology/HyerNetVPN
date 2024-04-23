@@ -1405,21 +1405,6 @@ public class VpnConfigGeneratorTest {
         assertEquals(expectedVPNConfig_v1_udp_tcp.trim(), vpnProfiles.get(OPENVPN).getConfigFile(context, false).trim());
     }
 
-
-    @Test
-    public void testGenerateVpnProfile_v3_obfs4() throws Exception {
-        BuildConfigHelper buildConfigHelper = MockHelper.mockBuildConfigHelper(false);
-        gateway = new JSONObject(TestSetupHelper.getInputAsString(getClass().getClassLoader().getResourceAsStream("ptdemo.bitmask.eip-service.json"))).getJSONArray("gateways").getJSONObject(0);
-        VpnConfigGenerator.Configuration configuration = new VpnConfigGenerator.Configuration();
-        configuration.apiVersion = 3;
-        vpnConfigGenerator = new VpnConfigGenerator(generalConfig, secrets, gateway, configuration);
-        HashMap<Connection.TransportType, VpnProfile> vpnProfiles = vpnConfigGenerator.generateVpnProfiles();
-        assertTrue(vpnProfiles.containsKey(OBFS4));
-        assertTrue(vpnProfiles.containsKey(OPENVPN));
-        System.out.println(vpnProfiles.get(OBFS4).getConfigFile(context, false));
-        assertEquals(expectedVPNConfig_v3_obfs4.trim(), vpnProfiles.get(OBFS4).getConfigFile(context, false).trim());
-    }
-
     @Test
     public void testGenerateVpnProfile_v3_obfs4_obfsvpn() throws Exception {
         BuildConfigHelper buildConfigHelper = MockHelper.mockBuildConfigHelper(true);

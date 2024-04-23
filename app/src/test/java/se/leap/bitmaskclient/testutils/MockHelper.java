@@ -10,7 +10,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_CONFIGURED;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_EIP_DEFINITION;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_MOTD;
 import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_MOTD_HASHES;
@@ -21,7 +20,6 @@ import static se.leap.bitmaskclient.base.models.Constants.PROVIDER_VPN_CERTIFICA
 import static se.leap.bitmaskclient.base.utils.PreferenceHelper.getEipDefinitionFromPreferences;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -29,9 +27,6 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.os.ResultReceiver;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,26 +42,17 @@ import java.math.BigInteger;
 import java.net.UnknownHostException;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import okhttp3.OkHttpClient;
 import se.leap.bitmaskclient.R;
 import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.base.models.ProviderObservable;
+import se.leap.bitmaskclient.base.utils.BuildConfigHelper;
 import se.leap.bitmaskclient.base.utils.CertificateHelper;
 import se.leap.bitmaskclient.base.utils.FileHelper;
-import se.leap.bitmaskclient.base.utils.InputStreamHelper;
-import se.leap.bitmaskclient.base.utils.BuildConfigHelper;
 import se.leap.bitmaskclient.base.utils.PreferenceHelper;
 import se.leap.bitmaskclient.base.utils.RSAHelper;
 import se.leap.bitmaskclient.providersetup.ProviderApiConnector;
@@ -74,7 +60,6 @@ import se.leap.bitmaskclient.providersetup.connectivity.DnsResolver;
 import se.leap.bitmaskclient.providersetup.connectivity.OkHttpClientGenerator;
 import se.leap.bitmaskclient.testutils.BackendMockResponses.BackendMockProvider;
 import se.leap.bitmaskclient.testutils.matchers.BundleMatcher;
-import se.leap.bitmaskclient.tor.TorStatusObservable;
 
 /**
  * Created by cyberta on 29.01.18.
@@ -190,17 +175,8 @@ public class MockHelper {
 
     }
 
-    public static BuildConfigHelper mockBuildConfigHelper(boolean useObfsvpn) {
-        return mockBuildConfigHelper(useObfsvpn, true);
-    }
-
-    public static BuildConfigHelper mockBuildConfigHelper(boolean useObfsvpn, boolean isDefaultBitmask) {
+    public static BuildConfigHelper mockBuildConfigHelper(boolean isDefaultBitmask) {
         return new BuildConfigHelper(new BuildConfigHelper.BuildConfigHelperInterface() {
-            @Override
-            public boolean useObfsVpn() {
-                return useObfsvpn;
-            }
-
             @Override
             public boolean hasObfuscationPinningDefaults() {
                 return false;
