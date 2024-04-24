@@ -38,6 +38,7 @@ import se.leap.bitmaskclient.providersetup.ProviderSetupInterface.ProviderConfig
  * Created by cyberta on 17.08.18.
  */
 
+@Deprecated
 public class ProviderApiSetupBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = ProviderApiSetupBroadcastReceiver.class.getSimpleName();
     private final WeakReference<ProviderSetupInterface> setupInterfaceRef;
