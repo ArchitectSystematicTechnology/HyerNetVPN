@@ -39,10 +39,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import java.util.Locale;
 import java.util.Set;
 
 import de.blinkt.openvpn.core.VpnStatus;
@@ -85,8 +88,23 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         initGatewayPinningEntry(view);
         initExperimentalTransportsEntry(view);
         initObfuscationPinningEntry(view);
+        initLanguageSwitcherEntry(view);
         setActionBarSubtitle(this, advanced_settings);
         return view;
+    }
+
+    private void initLanguageSwitcherEntry(View view) {
+        IconSwitchEntry languageSwitcher = view.findViewById(R.id.language_switcher);
+        languageSwitcher.findViewById(R.id.option_switch).setVisibility(GONE);
+        Locale defaultLocale = AppCompatDelegate.getApplicationLocales().get(0);
+        if (defaultLocale!=null) {
+            languageSwitcher.setSubtitle(defaultLocale.getDisplayName());
+        } else {
+            defaultLocale = LocaleListCompat.getDefault().get(0);
+        }
+        languageSwitcher.setVisibility(VISIBLE);
+        Locale finalDefaultLocale = defaultLocale;
+        languageSwitcher.setOnClickListener(v -> LanguageSelectionFragment.newInstance(finalDefaultLocale).show(getChildFragmentManager(),LanguageSelectionFragment.TAG));
     }
 
     @Override

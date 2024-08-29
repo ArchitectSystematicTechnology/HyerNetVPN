@@ -134,5 +134,13 @@
             android:visibility="gone"
             />
 
+        <se.leap.bitmaskclient.base.views.IconSwitchEntry
+            android:id="@+id/language_switcher"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:text="Change Language"
+            app:singleLine="false"
+            app:subtitle="Default" />
+
     </LinearLayout>
 </ScrollView>
