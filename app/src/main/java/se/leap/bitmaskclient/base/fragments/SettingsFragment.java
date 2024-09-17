@@ -98,7 +98,12 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         languageSwitcher.findViewById(R.id.option_switch).setVisibility(GONE);
         Locale defaultLocale = AppCompatDelegate.getApplicationLocales().get(0);
         if (defaultLocale!=null) {
-            languageSwitcher.setSubtitle(defaultLocale.getDisplayName());
+            String language = LanguageSelectionFragment.getSupportedLanguages(getResources()).get(defaultLocale.toLanguageTag());
+            if (language != null) {
+                languageSwitcher.setSubtitle(language);
+            } else {
+                languageSwitcher.setSubtitle(defaultLocale.getDisplayName());
+            }
         } else {
             defaultLocale = LocaleListCompat.getDefault().get(0);
         }

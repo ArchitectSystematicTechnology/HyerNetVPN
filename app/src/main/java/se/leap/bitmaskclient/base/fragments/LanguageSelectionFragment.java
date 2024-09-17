@@ -1,5 +1,6 @@
 package se.leap.bitmaskclient.base.fragments;
 
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,17 +17,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+import java.util.Map;
 
 import se.leap.bitmaskclient.R;
 
 public class LanguageSelectionFragment extends BottomSheetDialogFragment {
     static final String TAG = LanguageSelectionFragment.class.getSimpleName();
-    static final String DEFAULT_LOCALE = "defaultLocale";
+    static final String SYSTEM_LOCALE = "systemLocale";
 
     private LanguageSelectionFragment() {
     }
@@ -34,7 +34,7 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
     public static LanguageSelectionFragment newInstance(Locale defaultLocale) {
         LanguageSelectionFragment fragment = new LanguageSelectionFragment();
         Bundle args = new Bundle();
-        args.putString(DEFAULT_LOCALE, defaultLocale.toLanguageTag());
+        args.putString(SYSTEM_LOCALE, defaultLocale.toLanguageTag());
         fragment.setArguments(args);
         return fragment;
     }
@@ -50,7 +50,7 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
         String defaultLocale = "en-US";
         if (getArguments() != null) {
-            defaultLocale = getArguments().getString(DEFAULT_LOCALE);
+            defaultLocale = getArguments().getString(SYSTEM_LOCALE);
         }
 
         view.findViewById(R.id.close).setOnClickListener(v -> dismiss());
@@ -74,20 +74,28 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
      * @return list of supported languages
      */
     private @NonNull List<Language> getLanguages() {
-        Set<String> supportedLanguages = new HashSet<>(Arrays.asList(getResources().getStringArray(R.array.supported_languages)));
-        Locale[] locales = Locale.getAvailableLocales();
+        String[] supportedLanguages = getResources().getStringArray(R.array.supported_languages);
+        String[] supportedLanguageNames = getResources().getStringArray(R.array.supported_language_names);
 
         List<Language> languageList = new ArrayList<>();
-        languageList.add(new Language("System Language", ""));
-        for (Locale locale : locales) {
-            String languageTag = locale.toLanguageTag();
-            if (supportedLanguages.contains(languageTag)) {
-                languageList.add(new Language(locale.getDisplayName(), languageTag));
-            }
+        languageList.add(new Language(getString(R.string.system_language), ""));
+        for (int i = 0; i < supportedLanguages.length; i++) {
+            languageList.add(new Language(supportedLanguageNames[i], supportedLanguages[i]));
         }
         return languageList;
     }
 
+    public static Map<String, String> getSupportedLanguages(Resources resources) {
+        String[] supportedLanguages = resources.getStringArray(R.array.supported_languages);
+        String[] supportedLanguageNames = resources.getStringArray(R.array.supported_language_names);
+
+        Map<String, String> languageMap = new HashMap<>();
+        for (int i = 0; i < supportedLanguages.length; i++) {
+            languageMap.put(supportedLanguages[i], supportedLanguageNames[i]);
+        }
+
+        return languageMap;
+    }
     /**
      * Update the locale of the application
      *
@@ -128,7 +136,7 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
         @NonNull
         @Override
         public LanguageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.v_single_list_item, parent, false);
             return new LanguageViewHolder(view);
         }
 

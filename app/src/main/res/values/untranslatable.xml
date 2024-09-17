@@ -93,4 +93,49 @@
         <item>zh</item>
         <item>zh-TW</item>
     </string-array>
+
+    <string-array name="supported_language_names" translatable="false">
+        <item>العربية</item>
+        <item>Azərbaycan dili</item>
+        <item>Български</item>
+        <item>বাংলা</item>
+        <item>Brezhoneg</item>
+        <item>Català</item>
+        <item>Čeština</item>
+        <item>Deutsch</item>
+        <item>Ελληνικά</item>
+        <item>English</item>
+        <item>Español</item>
+        <item>Español (Argentina)</item>
+        <item>Español (Cuba)</item>
+        <item>Eesti keel</item>
+        <item>Euskara</item>
+        <item>فارسی</item>
+        <item>Suomi</item>
+        <item>Français</item>
+        <item>Galego</item>
+        <item>עברית</item>
+        <item>Hrvatski</item>
+        <item>Magyar</item>
+        <item>Bahasa Indonesia</item>
+        <item>Italiano</item>
+        <item>日本語</item>
+        <item>Lietuvių kalba</item>
+        <item>မြန်မာဘာသာ</item>
+        <item>Nederlands</item>
+        <item>Norsk</item>
+        <item>Polski</item>
+        <item>Português</item>
+        <item>Português</item>
+        <item>Português (Brasil)</item>
+        <item>Português (Portugal)</item>
+        <item>Română</item>
+        <item>Русский</item>
+        <item>Türkçe</item>
+        <item>ئۇيغۇرچە</item>
+        <item>Українська</item>
+        <item>Tiếng Việt</item>
+        <item>中文</item>
+        <item>中文 (台灣)</item>
+    </string-array>
 </resources>
