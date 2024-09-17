@@ -24,7 +24,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:background="@color/transparent"
         android:padding="@dimen/standard_margin"
-        android:src="@drawable/ic_cancel"/>
+        app:tint="@color/black"
+        android:src="@drawable/ic_close_white_24dp"/>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/languages"
         android:layout_width="match_parent"
