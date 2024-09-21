@@ -1,5 +1,8 @@
 package se.leap.bitmaskclient.base.fragments;
 
+import static se.leap.bitmaskclient.base.utils.ViewHelper.setActionBarSubtitle;
+
+import android.app.LocaleManager;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -23,13 +26,14 @@ import java.util.Locale;
 import java.util.Map;
 
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.base.views.SimpleCheckBox;
+import se.leap.bitmaskclient.databinding.FLanguageSelectionBinding;
+import se.leap.bitmaskclient.databinding.VSelectTextListItemBinding;
 
 public class LanguageSelectionFragment extends BottomSheetDialogFragment {
     static final String TAG = LanguageSelectionFragment.class.getSimpleName();
     static final String SYSTEM_LOCALE = "systemLocale";
-
-    private LanguageSelectionFragment() {
-    }
+    private FLanguageSelectionBinding binding;
 
     public static LanguageSelectionFragment newInstance(Locale defaultLocale) {
         LanguageSelectionFragment fragment = new LanguageSelectionFragment();
@@ -42,30 +46,26 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.f_language_selection, container, false);
+        binding = FLanguageSelectionBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        String defaultLocale = "en-US";
-        if (getArguments() != null) {
-            defaultLocale = getArguments().getString(SYSTEM_LOCALE);
-        }
-
-        view.findViewById(R.id.close).setOnClickListener(v -> dismiss());
-
-        RecyclerView languageRecyclerView = view.findViewById(R.id.languages);
+        setActionBarSubtitle(this, R.string.select_language);
 
         List<Language> languageList = getLanguages();
-
-        languageRecyclerView.setAdapter(
+        Locale defaultLocale = AppCompatDelegate.getApplicationLocales().get(0);
+        if (defaultLocale == null) {
+            defaultLocale = LocaleListCompat.getDefault().get(0);
+        }
+        binding.languages.setAdapter(
                 new LanguageSelectionAdapter(languageList, language -> {
                     updateLocale(language.tag);
-                    dismiss();
-                }, defaultLocale)
+                }, defaultLocale.toLanguageTag())
         );
-        languageRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding.languages.setLayoutManager(new LinearLayoutManager(getContext()));
     }
 
     /**
@@ -78,24 +78,12 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
         String[] supportedLanguageNames = getResources().getStringArray(R.array.supported_language_names);
 
         List<Language> languageList = new ArrayList<>();
-        languageList.add(new Language(getString(R.string.system_language), ""));
         for (int i = 0; i < supportedLanguages.length; i++) {
             languageList.add(new Language(supportedLanguageNames[i], supportedLanguages[i]));
         }
         return languageList;
     }
 
-    public static Map<String, String> getSupportedLanguages(Resources resources) {
-        String[] supportedLanguages = resources.getStringArray(R.array.supported_languages);
-        String[] supportedLanguageNames = resources.getStringArray(R.array.supported_language_names);
-
-        Map<String, String> languageMap = new HashMap<>();
-        for (int i = 0; i < supportedLanguages.length; i++) {
-            languageMap.put(supportedLanguages[i], supportedLanguageNames[i]);
-        }
-
-        return languageMap;
-    }
     /**
      * Update the locale of the application
      *
@@ -111,6 +99,7 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
 
     /**
      * Language record to hold the language name and tag
+     *
      * @param name
      * @param tag
      */
@@ -136,19 +125,15 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
         @NonNull
         @Override
         public LanguageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.v_single_list_item, parent, false);
-            return new LanguageViewHolder(view);
+            VSelectTextListItemBinding binding = VSelectTextListItemBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+            return new LanguageViewHolder(binding);
         }
 
         @Override
         public void onBindViewHolder(@NonNull LanguageViewHolder holder, int position) {
             Language language = languages.get(position);
             holder.languageName.setText(language.name());
-            if (language.tag.equals(selectedLocale)) {
-                holder.languageName.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.check_bold, 0);
-            } else {
-                holder.languageName.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-            }
+            holder.selected.setChecked(language.tag.equals(selectedLocale));
             holder.itemView.setOnClickListener(v -> clickListener.onLanguageClick(language));
         }
 
@@ -162,10 +147,15 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
          */
         static class LanguageViewHolder extends RecyclerView.ViewHolder {
             TextView languageName;
+            SimpleCheckBox selected;
 
-            public LanguageViewHolder(@NonNull View itemView) {
-                super(itemView);
-                languageName = itemView.findViewById(android.R.id.text1);
+            public LanguageViewHolder(@NonNull VSelectTextListItemBinding binding) {
+                super(binding.getRoot());
+                languageName = binding.location;
+                selected = binding.selected;
+                binding.title.setVisibility(View.GONE);
+                binding.bridgeImage.setVisibility(View.GONE);
+                binding.quality.setVisibility(View.GONE);
             }
         }
     }
