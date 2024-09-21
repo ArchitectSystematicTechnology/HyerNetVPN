@@ -88,28 +88,8 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         initGatewayPinningEntry(view);
         initExperimentalTransportsEntry(view);
         initObfuscationPinningEntry(view);
-        initLanguageSwitcherEntry(view);
         setActionBarSubtitle(this, advanced_settings);
         return view;
-    }
-
-    private void initLanguageSwitcherEntry(View view) {
-        IconSwitchEntry languageSwitcher = view.findViewById(R.id.language_switcher);
-        languageSwitcher.findViewById(R.id.option_switch).setVisibility(GONE);
-        Locale defaultLocale = AppCompatDelegate.getApplicationLocales().get(0);
-        if (defaultLocale!=null) {
-            String language = LanguageSelectionFragment.getSupportedLanguages(getResources()).get(defaultLocale.toLanguageTag());
-            if (language != null) {
-                languageSwitcher.setSubtitle(language);
-            } else {
-                languageSwitcher.setSubtitle(defaultLocale.getDisplayName());
-            }
-        } else {
-            defaultLocale = LocaleListCompat.getDefault().get(0);
-        }
-        languageSwitcher.setVisibility(VISIBLE);
-        Locale finalDefaultLocale = defaultLocale;
-        languageSwitcher.setOnClickListener(v -> LanguageSelectionFragment.newInstance(finalDefaultLocale).show(getChildFragmentManager(),LanguageSelectionFragment.TAG));
     }
 
     @Override

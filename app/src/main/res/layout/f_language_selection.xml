@@ -6,30 +6,10 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".base.fragments.LanguageSelectionFragment">
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Select Language"
-        android:layout_marginStart="@dimen/activity_margin"
-        android:layout_marginVertical="@dimen/activity_margin"
-        style="@style/TextAppearance.AppCompat.Title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
-    <ImageButton
-        android:id="@+id/close"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:background="@color/transparent"
-        android:padding="@dimen/standard_margin"
-        app:tint="@color/black"
-        android:src="@drawable/ic_close_white_24dp"/>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/languages"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title"/>
+        app:layout_constraintTop_toTopOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
