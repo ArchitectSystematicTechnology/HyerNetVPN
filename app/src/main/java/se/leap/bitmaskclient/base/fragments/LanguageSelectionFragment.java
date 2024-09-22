@@ -21,6 +21,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -55,6 +56,28 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
         super.onViewCreated(view, savedInstanceState);
         setActionBarSubtitle(this, R.string.select_language);
 
+        initDefaultSelection();
+        initRecyclerView();
+    }
+
+    private void initDefaultSelection() {
+        customizeSelectionItem(binding.defaultLanguage);
+        if (!getSupportedLanguages(getResources()).containsKey(getCurrentLocale().toLanguageTag())) {
+            binding.defaultLanguage.selected.setChecked(true);
+        }
+        binding.defaultLanguage.location.setText(R.string.system_language);
+        binding.defaultLanguage.getRoot().setOnClickListener(v -> {
+            updateLocale("");
+        });
+    }
+
+    private static void customizeSelectionItem(VSelectTextListItemBinding binding) {
+        binding.title.setVisibility(View.GONE);
+        binding.bridgeImage.setVisibility(View.GONE);
+        binding.quality.setVisibility(View.GONE);
+    }
+
+    private void initRecyclerView() {
         List<Language> languageList = getLanguages();
         Locale defaultLocale = AppCompatDelegate.getApplicationLocales().get(0);
         if (defaultLocale == null) {
@@ -74,14 +97,33 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
      * @return list of supported languages
      */
     private @NonNull List<Language> getLanguages() {
-        String[] supportedLanguages = getResources().getStringArray(R.array.supported_languages);
-        String[] supportedLanguageNames = getResources().getStringArray(R.array.supported_language_names);
+        Map<String, String> languageMap = getSupportedLanguages(getResources());
 
         List<Language> languageList = new ArrayList<>();
-        for (int i = 0; i < supportedLanguages.length; i++) {
-            languageList.add(new Language(supportedLanguageNames[i], supportedLanguages[i]));
+        for (Map.Entry<String, String> entry : languageMap.entrySet()) {
+            languageList.add(new Language(entry.getValue(), entry.getKey()));
         }
         return languageList;
+    }
+
+    public static Locale getCurrentLocale() {
+        Locale defaultLocale = AppCompatDelegate.getApplicationLocales().get(0);
+        if (defaultLocale == null) {
+            defaultLocale = LocaleListCompat.getDefault().get(0);
+        }
+        return defaultLocale;
+    }
+
+    public static Map<String, String> getSupportedLanguages(Resources resources) {
+        String[] supportedLanguages = resources.getStringArray(R.array.supported_languages);
+        String[] supportedLanguageNames = resources.getStringArray(R.array.supported_language_names);
+
+        Map<String, String> languageMap = new LinkedHashMap<>();
+        for (int i = 0; i < supportedLanguages.length; i++) {
+            languageMap.put(supportedLanguages[i], supportedLanguageNames[i]);
+        }
+
+        return languageMap;
     }
 
     /**
@@ -153,9 +195,7 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
                 super(binding.getRoot());
                 languageName = binding.location;
                 selected = binding.selected;
-                binding.title.setVisibility(View.GONE);
-                binding.bridgeImage.setVisibility(View.GONE);
-                binding.quality.setVisibility(View.GONE);
+                customizeSelectionItem(binding);
             }
         }
     }

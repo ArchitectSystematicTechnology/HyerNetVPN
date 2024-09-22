@@ -58,6 +58,7 @@ import androidx.fragment.app.Fragment;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Locale;
+import java.util.Map;
 
 import se.leap.bitmaskclient.BuildConfig;
 import se.leap.bitmaskclient.R;
@@ -321,11 +322,15 @@ public class NavigationDrawerFragment extends Fragment implements SharedPreferen
 
     private void initLanguageSettingsEntry() {
         IconTextEntry languageSwitcher = drawerView.findViewById(R.id.language_switcher);
-        Locale defaultLocale = AppCompatDelegate.getApplicationLocales().get(0);
-        if (defaultLocale==null) {
-            defaultLocale = LocaleListCompat.getDefault().get(0);
+
+        Locale currentLocale = LanguageSelectionFragment.getCurrentLocale();
+        Map<String, String> supportedLanguages = LanguageSelectionFragment.getSupportedLanguages(getResources());
+        if (supportedLanguages.containsKey(currentLocale.toLanguageTag())) {
+            languageSwitcher.setSubtitle(supportedLanguages.get(currentLocale.toLanguageTag()));
+        } else {
+            languageSwitcher.setSubtitle(getString(R.string.system_language));
         }
-        languageSwitcher.setSubtitle(defaultLocale.toLanguageTag());
+
         languageSwitcher.setOnClickListener(v -> {
             FragmentManagerEnhanced fragmentManager = new FragmentManagerEnhanced(getActivity().getSupportFragmentManager());
             closeDrawer();
