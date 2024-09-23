@@ -329,8 +329,6 @@ public class NavigationDrawerFragment extends Fragment implements SharedPreferen
             languageSwitcher.setSubtitle(supportedLanguages.get(currentLocale.toLanguageTag()));
         } else if (supportedLanguages.containsKey(currentLocale.getLanguage())) {
             languageSwitcher.setSubtitle(supportedLanguages.get(currentLocale.getLanguage()));
-        } else {
-            languageSwitcher.setSubtitle(getString(R.string.system_language));
         }
 
         languageSwitcher.setOnClickListener(v -> {

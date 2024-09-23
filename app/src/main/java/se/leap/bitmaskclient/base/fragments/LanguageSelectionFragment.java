@@ -55,21 +55,7 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
         setActionBarSubtitle(this, R.string.select_language);
         Map<String, String> supportedLanguages = getSupportedLanguages(getResources());
 
-        initDefaultSelection(supportedLanguages);
         initRecyclerView(supportedLanguages);
-    }
-
-    private void initDefaultSelection(Map<String, String> supportedLanguages) {
-        customizeSelectionItem(binding.defaultLanguage);
-        Locale locale = getCurrentLocale();
-
-        if (!supportedLanguages.containsKey(locale.toLanguageTag()) && !supportedLanguages.containsKey(locale.getLanguage())) {
-            binding.defaultLanguage.selected.setChecked(true);
-        }
-        binding.defaultLanguage.location.setText(R.string.system_language);
-        binding.defaultLanguage.getRoot().setOnClickListener(v -> {
-            updateLocale("");
-        });
     }
 
     private static void customizeSelectionItem(VSelectTextListItemBinding binding) {

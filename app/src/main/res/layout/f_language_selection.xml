@@ -8,30 +8,10 @@
     android:layout_margin="@dimen/stdpadding"
     tools:context=".base.fragments.LanguageSelectionFragment">
 
-    <include
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/default_language"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        layout="@layout/v_select_text_list_item" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/manual_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:paddingTop="15dp"
-        android:text="@string/gateway_selection_manually"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textStyle="normal"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/default_language" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/languages"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/manual_title" />
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
