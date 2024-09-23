@@ -80,7 +80,6 @@
         <item>nl</item>
         <item>no</item>
         <item>pl</item>
-        <item>port</item>
         <item>pt</item>
         <item>pt-BR</item>
         <item>pt-PT</item>
@@ -93,49 +92,47 @@
         <item>zh</item>
         <item>zh-TW</item>
     </string-array>
-
     <string-array name="supported_language_names" translatable="false">
-        <item>العربية</item>
-        <item>Azərbaycan dili</item>
-        <item>Български</item>
-        <item>বাংলা</item>
-        <item>Brezhoneg</item>
-        <item>Català</item>
-        <item>Čeština</item>
-        <item>Deutsch</item>
-        <item>Ελληνικά</item>
+        <item>Arabic</item>
+        <item>Azerbaijani</item>
+        <item>Bulgarian</item>
+        <item>Bengali</item>
+        <item>Breton</item>
+        <item>Catalan</item>
+        <item>Czech</item>
+        <item>German</item>
+        <item>Greek</item>
         <item>English</item>
-        <item>Español</item>
-        <item>Español (Argentina)</item>
-        <item>Español (Cuba)</item>
-        <item>Eesti keel</item>
-        <item>Euskara</item>
-        <item>فارسی</item>
-        <item>Suomi</item>
-        <item>Français</item>
-        <item>Galego</item>
-        <item>עברית</item>
-        <item>Hrvatski</item>
-        <item>Magyar</item>
-        <item>Bahasa Indonesia</item>
-        <item>Italiano</item>
-        <item>日本語</item>
-        <item>Lietuvių kalba</item>
-        <item>မြန်မာဘာသာ</item>
-        <item>Nederlands</item>
-        <item>Norsk</item>
-        <item>Polski</item>
-        <item>Português</item>
-        <item>Português</item>
-        <item>Português (Brasil)</item>
-        <item>Português (Portugal)</item>
-        <item>Română</item>
-        <item>Русский</item>
-        <item>Türkçe</item>
-        <item>ئۇيغۇرچە</item>
-        <item>Українська</item>
-        <item>Tiếng Việt</item>
-        <item>中文</item>
-        <item>中文 (台灣)</item>
+        <item>Spanish</item>
+        <item>Spanish (Argentina)</item>
+        <item>Spanish (Cuba)</item>
+        <item>Estonian</item>
+        <item>Basque</item>
+        <item>Persian</item>
+        <item>Finnish</item>
+        <item>French</item>
+        <item>Galician</item>
+        <item>Hebrew</item>
+        <item>Croatian</item>
+        <item>Hungarian</item>
+        <item>Indonesian</item>
+        <item>Italian</item>
+        <item>Japanese</item>
+        <item>Lithuanian</item>
+        <item>Burmese</item>
+        <item>Dutch</item>
+        <item>Norwegian</item>
+        <item>Polish</item>
+        <item>Portuguese</item>
+        <item>Portuguese (Brazil)</item>
+        <item>Portuguese (Portugal)</item>
+        <item>Romanian</item>
+        <item>Russian</item>
+        <item>Turkish</item>
+        <item>Uyghur</item>
+        <item>Ukrainian</item>
+        <item>Vietnamese</item>
+        <item>Chinese</item>
+        <item>Chinese (Taiwan)</item>
     </string-array>
 </resources>
