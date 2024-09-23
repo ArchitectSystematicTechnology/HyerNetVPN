@@ -2,7 +2,6 @@ package se.leap.bitmaskclient.base.fragments;
 
 import static se.leap.bitmaskclient.base.utils.ViewHelper.setActionBarSubtitle;
 
-import android.app.LocaleManager;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -55,14 +53,17 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setActionBarSubtitle(this, R.string.select_language);
+        Map<String, String> supportedLanguages = getSupportedLanguages(getResources());
 
-        initDefaultSelection();
-        initRecyclerView();
+        initDefaultSelection(supportedLanguages);
+        initRecyclerView(supportedLanguages);
     }
 
-    private void initDefaultSelection() {
+    private void initDefaultSelection(Map<String, String> supportedLanguages) {
         customizeSelectionItem(binding.defaultLanguage);
-        if (!getSupportedLanguages(getResources()).containsKey(getCurrentLocale().toLanguageTag())) {
+        Locale locale = getCurrentLocale();
+
+        if (!supportedLanguages.containsKey(locale.toLanguageTag()) && !supportedLanguages.containsKey(locale.getLanguage())) {
             binding.defaultLanguage.selected.setChecked(true);
         }
         binding.defaultLanguage.location.setText(R.string.system_language);
@@ -77,33 +78,15 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
         binding.quality.setVisibility(View.GONE);
     }
 
-    private void initRecyclerView() {
-        List<Language> languageList = getLanguages();
+    private void initRecyclerView(Map<String, String> supportedLanguages) {
         Locale defaultLocale = AppCompatDelegate.getApplicationLocales().get(0);
         if (defaultLocale == null) {
             defaultLocale = LocaleListCompat.getDefault().get(0);
         }
         binding.languages.setAdapter(
-                new LanguageSelectionAdapter(languageList, language -> {
-                    updateLocale(language.tag);
-                }, defaultLocale.toLanguageTag())
+                new LanguageSelectionAdapter(supportedLanguages, this::updateLocale, defaultLocale)
         );
         binding.languages.setLayoutManager(new LinearLayoutManager(getContext()));
-    }
-
-    /**
-     * Get the list of supported languages from the resources.
-     *
-     * @return list of supported languages
-     */
-    private @NonNull List<Language> getLanguages() {
-        Map<String, String> languageMap = getSupportedLanguages(getResources());
-
-        List<Language> languageList = new ArrayList<>();
-        for (Map.Entry<String, String> entry : languageMap.entrySet()) {
-            languageList.add(new Language(entry.getValue(), entry.getKey()));
-        }
-        return languageList;
     }
 
     public static Locale getCurrentLocale() {
@@ -140,28 +123,20 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
     }
 
     /**
-     * Language record to hold the language name and tag
-     *
-     * @param name
-     * @param tag
-     */
-    record Language(String name, String tag) {
-    }
-
-
-    /**
      * Adapter for the language selection recycler view.
      */
     static class LanguageSelectionAdapter extends RecyclerView.Adapter<LanguageSelectionAdapter.LanguageViewHolder> {
 
-        private final List<Language> languages;
+        private final Map<String, String> languages;
+        private final List<String> languageTags;
         private final LanguageClickListener clickListener;
-        private final String selectedLocale;
+        private final Locale selectedLocale;
 
-        public LanguageSelectionAdapter(List<Language> languages, LanguageClickListener clickListener, String defaultLocale) {
+        public LanguageSelectionAdapter(Map<String, String> languages, LanguageClickListener clickListener, Locale defaultLocale) {
             this.languages = languages;
             this.clickListener = clickListener;
             this.selectedLocale = defaultLocale;
+            this.languageTags = new ArrayList<>(languages.keySet());
         }
 
         @NonNull
@@ -173,10 +148,14 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
 
         @Override
         public void onBindViewHolder(@NonNull LanguageViewHolder holder, int position) {
-            Language language = languages.get(position);
-            holder.languageName.setText(language.name());
-            holder.selected.setChecked(language.tag.equals(selectedLocale));
-            holder.itemView.setOnClickListener(v -> clickListener.onLanguageClick(language));
+            String languageTag = languageTags.get(position);
+            holder.languageName.setText(languages.get(languageTag));
+            if (languages.containsKey(selectedLocale.toLanguageTag())) {
+                holder.selected.setChecked(selectedLocale.toLanguageTag().equals(languageTag));
+            } else {
+                holder.selected.setChecked(selectedLocale.getLanguage().equals(languageTag));
+            }
+            holder.itemView.setOnClickListener(v -> clickListener.onLanguageClick(languageTag));
         }
 
         @Override
@@ -205,6 +184,6 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
      * Interface for the language click listener
      */
     interface LanguageClickListener {
-        void onLanguageClick(Language language);
+        void onLanguageClick(String languageTag);
     }
 }

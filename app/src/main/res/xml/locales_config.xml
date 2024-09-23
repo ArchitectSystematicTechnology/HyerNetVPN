@@ -30,7 +30,6 @@
     <locale android:name="nl"/>
     <locale android:name="no"/>
     <locale android:name="pl"/>
-    <locale android:name="port"/>
     <locale android:name="pt"/>
     <locale android:name="pt-BR"/>
     <locale android:name="pt-PT"/>
