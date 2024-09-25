@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -65,6 +67,13 @@ public class LanguageSelectionFragment extends BottomSheetDialogFragment {
         if (defaultLocale == null) {
             defaultLocale = LocaleListCompat.getDefault().get(0);
         }
+        // NOTE: Sort the supported languages by their display names.
+        // This would make updating supported languages easier as we don't have to tip toe around the order
+        Collections.sort(supportedLanguages, (lang1, lang2) -> {
+            String displayName1 = Locale.forLanguageTag(lang1).getDisplayName(Locale.ENGLISH);
+            String displayName2 = Locale.forLanguageTag(lang2).getDisplayName(Locale.ENGLISH);
+            return displayName1.compareTo(displayName2);
+        });
         binding.languages.setAdapter(
                 new LanguageSelectionAdapter(supportedLanguages, this::updateLocale, defaultLocale)
         );
