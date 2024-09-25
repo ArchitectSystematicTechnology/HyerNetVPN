@@ -324,12 +324,7 @@ public class NavigationDrawerFragment extends Fragment implements SharedPreferen
         IconTextEntry languageSwitcher = drawerView.findViewById(R.id.language_switcher);
 
         Locale currentLocale = LanguageSelectionFragment.getCurrentLocale();
-        Map<String, String> supportedLanguages = LanguageSelectionFragment.getSupportedLanguages(getResources());
-        if (supportedLanguages.containsKey(currentLocale.toLanguageTag())) {
-            languageSwitcher.setSubtitle(supportedLanguages.get(currentLocale.toLanguageTag()));
-        } else if (supportedLanguages.containsKey(currentLocale.getLanguage())) {
-            languageSwitcher.setSubtitle(supportedLanguages.get(currentLocale.getLanguage()));
-        }
+        languageSwitcher.setSubtitle(currentLocale.getDisplayName(Locale.ENGLISH));
 
         languageSwitcher.setOnClickListener(v -> {
             FragmentManagerEnhanced fragmentManager = new FragmentManagerEnhanced(getActivity().getSupportFragmentManager());
