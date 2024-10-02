@@ -1,6 +1,7 @@
 package se.leap.bitmaskclient.providersetup.fragments;
 
 import static se.leap.bitmaskclient.providersetup.fragments.viewmodel.ProviderSelectionViewModel.ADD_PROVIDER;
+import static se.leap.bitmaskclient.providersetup.fragments.viewmodel.ProviderSelectionViewModel.INVITE_CODE_PROVIDER;
 
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -61,13 +62,20 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
             binding.providerRadioGroup.addView(radioButton);
             radioButtons.add(radioButton);
         }
-        RadioButton radioButton = new RadioButton(binding.getRoot().getContext());
-        radioButton.setText(getText(R.string.add_provider));
-        radioButton.setId(ADD_PROVIDER);
-        binding.providerRadioGroup.addView(radioButton);
-        radioButtons.add(radioButton);
+        RadioButton inviteCodeRadioButton = new RadioButton(binding.getRoot().getContext());
+        inviteCodeRadioButton.setText("Enter invite Code");
+        inviteCodeRadioButton.setId(INVITE_CODE_PROVIDER);
+        binding.providerRadioGroup.addView(inviteCodeRadioButton);
+        radioButtons.add(inviteCodeRadioButton);
+
+        RadioButton addProviderRadioButton = new RadioButton(binding.getRoot().getContext());
+        addProviderRadioButton.setText(getText(R.string.add_provider));
+        addProviderRadioButton.setId(ADD_PROVIDER);
+        binding.providerRadioGroup.addView(addProviderRadioButton);
+        radioButtons.add(addProviderRadioButton);
 
         binding.editCustomProvider.setVisibility(viewModel.getEditProviderVisibility());
+        binding.syntaxCheck.setVisibility(viewModel.getEditProviderVisibility());
         return binding.getRoot();
     }
 
@@ -89,8 +97,15 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
             }
             binding.providerDescription.setText(viewModel.getProviderDescription(getContext()));
             binding.editCustomProvider.setVisibility(viewModel.getEditProviderVisibility());
+            binding.syntaxCheck.setVisibility(viewModel.getEditProviderVisibility());
+            if (viewModel.getCustomUrl() == null){
+                binding.syntaxCheckResult.setText(getString(R.string.validation_status_unknown));
+                binding.editCustomProvider.setHint(viewModel.getHint(getContext()));
+            } else {
+                binding.editCustomProvider.setText("");
+            }
             setupActivityCallback.onSetupStepValidationChanged(viewModel.isValidConfig());
-            if (checkedId != ADD_PROVIDER) {
+            if (checkedId != ADD_PROVIDER && checkedId != INVITE_CODE_PROVIDER) {
                 setupActivityCallback.onProviderSelected(viewModel.getProvider(checkedId));
             } else if (viewModel.isValidConfig()) {
                 setupActivityCallback.onProviderSelected(new Provider(binding.editCustomProvider.getText().toString()));
@@ -108,6 +123,11 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
                     setupActivityCallback.onSetupStepValidationChanged(viewModel.isValidConfig());
                     if (viewModel.isValidConfig()) {
                         setupActivityCallback.onProviderSelected(new Provider(viewModel.getCustomUrl()));
+                        binding.syntaxCheckResult.setText(getString(R.string.validation_status_success));
+                        binding.syntaxCheckResult.setTextColor(getResources().getColor(R.color.green200));
+                    } else {
+                        binding.syntaxCheckResult.setText(getString(R.string.validation_status_failure));
+                        binding.syntaxCheckResult.setTextColor(getResources().getColor(R.color.red200));
                     }
                 }
             }
