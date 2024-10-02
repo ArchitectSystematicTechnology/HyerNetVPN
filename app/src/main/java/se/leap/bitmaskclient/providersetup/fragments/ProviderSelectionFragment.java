@@ -98,8 +98,9 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
             binding.providerDescription.setText(viewModel.getProviderDescription(getContext()));
             binding.editCustomProvider.setVisibility(viewModel.getEditProviderVisibility());
             binding.syntaxCheck.setVisibility(viewModel.getEditProviderVisibility());
-            if (viewModel.getCustomUrl() == null){
+            if (viewModel.getCustomUrl() == null || viewModel.getCustomUrl().isEmpty()) {
                 binding.syntaxCheckResult.setText(getString(R.string.validation_status_unknown));
+                binding.syntaxCheckResult.setTextColor(getResources().getColor(R.color.color_font_btn));
                 binding.editCustomProvider.setHint(viewModel.getHint(getContext()));
             } else {
                 binding.editCustomProvider.setText("");
