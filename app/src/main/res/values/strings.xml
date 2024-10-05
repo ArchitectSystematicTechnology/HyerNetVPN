@@ -246,4 +246,5 @@
     <string name="validation_status_unknown">Unknown</string>
     <string name="validation_status_success">Good</string>
     <string name="validation_status_failure">Bad</string>
+    <string name="enter_invite_code">Enter invite Code</string>
 </resources>

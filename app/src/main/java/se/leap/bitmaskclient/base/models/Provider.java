@@ -86,6 +86,7 @@ public final class Provider implements Parcelable {
     private long lastGeoIpUpdate = 0L;
     private long lastMotdUpdate = 0L;
     private long lastMotdSeen = 0L;
+    private int type = 0;
     private Set<String> lastMotdSeenHashes = new HashSet<>();
     private boolean shouldUpdateVpnCertificate;
 
@@ -115,6 +116,10 @@ public final class Provider implements Parcelable {
 
     public Provider() { }
 
+    public Provider(String mainUrl, int selectedItem) {
+       this(mainUrl, null);
+        this.type = selectedItem;
+    }
     public Provider(String mainUrl) {
        this(mainUrl, null);
     }
@@ -737,6 +742,10 @@ public final class Provider implements Parcelable {
 
     public String getCaCertFingerprint() {
         return getCertificatePinEncoding() + ":" + getCertificatePin();
+    }
+
+    public int getType() {
+        return type;
     }
 
     /**

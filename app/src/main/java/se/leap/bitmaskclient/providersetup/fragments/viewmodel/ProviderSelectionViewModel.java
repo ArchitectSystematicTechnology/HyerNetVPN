@@ -2,6 +2,7 @@ package se.leap.bitmaskclient.providersetup.fragments.viewmodel;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.text.InputType;
 import android.util.Patterns;
 import android.view.View;
 import android.webkit.URLUtil;
@@ -11,6 +12,7 @@ import androidx.lifecycle.ViewModel;
 import java.util.List;
 
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.base.models.Introducer;
 import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.providersetup.ProviderManager;
 
@@ -52,7 +54,13 @@ public class ProviderSelectionViewModel extends ViewModel {
             return customUrl != null && (Patterns.DOMAIN_NAME.matcher(customUrl).matches() || (URLUtil.isNetworkUrl(customUrl) && Patterns.WEB_URL.matcher(customUrl).matches()));
         }
         if (selected == INVITE_CODE_PROVIDER) {
-            return customUrl != null && !customUrl.isEmpty(); // TODO: add invite code validation logic based on some rule
+            try {
+                Introducer introducer = Introducer.fromUrl(customUrl);
+                return introducer.validate();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
         }
         return true;
     }
@@ -85,6 +93,12 @@ public class ProviderSelectionViewModel extends ViewModel {
             return View.VISIBLE;
         }
         return View.GONE;
+    }
+    public int getEditInputType() {
+        if (selected == INVITE_CODE_PROVIDER) {
+            return InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+        }
+        return InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT;
     }
 
     public void setCustomUrl(String url) {

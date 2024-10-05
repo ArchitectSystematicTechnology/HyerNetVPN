@@ -63,7 +63,7 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
             radioButtons.add(radioButton);
         }
         RadioButton inviteCodeRadioButton = new RadioButton(binding.getRoot().getContext());
-        inviteCodeRadioButton.setText("Enter invite Code");
+        inviteCodeRadioButton.setText(R.string.enter_invite_code);
         inviteCodeRadioButton.setId(INVITE_CODE_PROVIDER);
         binding.providerRadioGroup.addView(inviteCodeRadioButton);
         radioButtons.add(inviteCodeRadioButton);
@@ -99,17 +99,18 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
             binding.editCustomProvider.setVisibility(viewModel.getEditProviderVisibility());
             binding.syntaxCheck.setVisibility(viewModel.getEditProviderVisibility());
             if (viewModel.getCustomUrl() == null || viewModel.getCustomUrl().isEmpty()) {
-                binding.syntaxCheckResult.setText(getString(R.string.validation_status_unknown));
+                binding.syntaxCheckResult.setText("");
                 binding.syntaxCheckResult.setTextColor(getResources().getColor(R.color.color_font_btn));
                 binding.editCustomProvider.setHint(viewModel.getHint(getContext()));
             } else {
                 binding.editCustomProvider.setText("");
             }
+            binding.editCustomProvider.setRawInputType(viewModel.getEditInputType());
             setupActivityCallback.onSetupStepValidationChanged(viewModel.isValidConfig());
             if (checkedId != ADD_PROVIDER && checkedId != INVITE_CODE_PROVIDER) {
                 setupActivityCallback.onProviderSelected(viewModel.getProvider(checkedId));
             } else if (viewModel.isValidConfig()) {
-                setupActivityCallback.onProviderSelected(new Provider(binding.editCustomProvider.getText().toString()));
+                setupActivityCallback.onProviderSelected(new Provider(binding.editCustomProvider.getText().toString(),checkedId));
             }
         });
 
@@ -123,7 +124,7 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
                 if (viewModel.isCustomProviderSelected()) {
                     setupActivityCallback.onSetupStepValidationChanged(viewModel.isValidConfig());
                     if (viewModel.isValidConfig()) {
-                        setupActivityCallback.onProviderSelected(new Provider(viewModel.getCustomUrl()));
+                        setupActivityCallback.onProviderSelected(new Provider(viewModel.getCustomUrl(),viewModel.getSelected()));
                         binding.syntaxCheckResult.setText(getString(R.string.validation_status_success));
                         binding.syntaxCheckResult.setTextColor(getResources().getColor(R.color.green200));
                     } else {
