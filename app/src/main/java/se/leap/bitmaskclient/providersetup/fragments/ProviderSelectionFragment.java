@@ -62,17 +62,17 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
             binding.providerRadioGroup.addView(radioButton);
             radioButtons.add(radioButton);
         }
-        RadioButton inviteCodeRadioButton = new RadioButton(binding.getRoot().getContext());
-        inviteCodeRadioButton.setText(R.string.enter_invite_code);
-        inviteCodeRadioButton.setId(INVITE_CODE_PROVIDER);
-        binding.providerRadioGroup.addView(inviteCodeRadioButton);
-        radioButtons.add(inviteCodeRadioButton);
-
         RadioButton addProviderRadioButton = new RadioButton(binding.getRoot().getContext());
         addProviderRadioButton.setText(getText(R.string.add_provider));
         addProviderRadioButton.setId(ADD_PROVIDER);
         binding.providerRadioGroup.addView(addProviderRadioButton);
         radioButtons.add(addProviderRadioButton);
+
+        RadioButton inviteCodeRadioButton = new RadioButton(binding.getRoot().getContext());
+        inviteCodeRadioButton.setText(R.string.enter_invite_code);
+        inviteCodeRadioButton.setId(INVITE_CODE_PROVIDER);
+        binding.providerRadioGroup.addView(inviteCodeRadioButton);
+        radioButtons.add(inviteCodeRadioButton);
 
         binding.editCustomProvider.setVisibility(viewModel.getEditProviderVisibility());
         binding.syntaxCheck.setVisibility(viewModel.getEditProviderVisibility());
