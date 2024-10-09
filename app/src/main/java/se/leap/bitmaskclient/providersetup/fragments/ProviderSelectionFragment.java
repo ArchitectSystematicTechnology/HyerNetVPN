@@ -16,9 +16,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import se.leap.bitmaskclient.R;
+import se.leap.bitmaskclient.base.models.Introducer;
 import se.leap.bitmaskclient.base.models.Provider;
 import se.leap.bitmaskclient.base.utils.ViewHelper;
 import se.leap.bitmaskclient.databinding.FProviderSelectionBinding;
@@ -114,7 +116,7 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
             if (checkedId != ADD_PROVIDER && checkedId != INVITE_CODE_PROVIDER) {
                 setupActivityCallback.onProviderSelected(viewModel.getProvider(checkedId));
             } else if (viewModel.isValidConfig()) {
-                setupActivityCallback.onProviderSelected(new Provider(binding.editCustomProvider.getText().toString(),checkedId));
+                providerSelected(binding.editCustomProvider.getText().toString(),checkedId);
             }
         });
 
@@ -128,7 +130,7 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
                 if (viewModel.isCustomProviderSelected()) {
                     setupActivityCallback.onSetupStepValidationChanged(viewModel.isValidConfig());
                     if (viewModel.isValidConfig()) {
-                        setupActivityCallback.onProviderSelected(new Provider(viewModel.getCustomUrl(),viewModel.getSelected()));
+                        providerSelected(viewModel.getCustomUrl(),viewModel.getSelected());
                         binding.syntaxCheckResult.setText(getString(R.string.validation_status_success));
                         binding.syntaxCheckResult.setTextColor(getResources().getColor(R.color.green200));
                     } else {
@@ -154,6 +156,18 @@ public class ProviderSelectionFragment extends BaseSetupFragment implements Canc
             }
         });
         binding.providerRadioGroup.check(viewModel.getSelected());
+    }
+
+    private void providerSelected(String string, int checkedId) {
+        if (checkedId == INVITE_CODE_PROVIDER) {
+            try {
+                setupActivityCallback.onProviderSelected(new Provider(Introducer.fromUrl(string)));
+            } catch (Exception e) {
+                // This cannot happen
+            }
+        } else {
+            setupActivityCallback.onProviderSelected(new Provider(string));
+        }
     }
 
     @Override

@@ -1,9 +1,12 @@
 package se.leap.bitmaskclient.base.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class Introducer {
+public class Introducer implements Parcelable {
     private String type;
     private String address;
     private String certificate;
@@ -17,6 +20,40 @@ public class Introducer {
         this.fullyQualifiedDomainName = fullyQualifiedDomainName;
         this.kcpEnabled = kcpEnabled;
     }
+
+    protected Introducer(Parcel in) {
+        type = in.readString();
+        address = in.readString();
+        certificate = in.readString();
+        fullyQualifiedDomainName = in.readString();
+        kcpEnabled = in.readByte() != 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(type);
+        dest.writeString(address);
+        dest.writeString(certificate);
+        dest.writeString(fullyQualifiedDomainName);
+        dest.writeByte((byte) (kcpEnabled ? 1 : 0));
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<Introducer> CREATOR = new Creator<>() {
+        @Override
+        public Introducer createFromParcel(Parcel in) {
+            return new Introducer(in);
+        }
+
+        @Override
+        public Introducer[] newArray(int size) {
+            return new Introducer[size];
+        }
+    };
 
     public boolean validate() {
         if (!"obfsvpnintro".equals(type)) {
@@ -49,6 +86,10 @@ public class Introducer {
         }
 
         return new Introducer(uri.getScheme(), uri.getAuthority(), cert, fqdn, kcp);
+    }
+
+    public String toUrl() {
+        return String.format("%s://%s?fqdn=%s&kcp=%d&cert=%s", type, address, fullyQualifiedDomainName, kcpEnabled ? 1 : 0, certificate);
     }
 
     private static String getQueryParam(URI uri, String param) {

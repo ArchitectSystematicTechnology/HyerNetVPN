@@ -30,6 +30,7 @@ import static se.leap.bitmaskclient.base.models.Constants.TRANSPORT;
 import static se.leap.bitmaskclient.base.models.Constants.TYPE;
 import static se.leap.bitmaskclient.base.utils.PrivateKeyHelper.parsePrivateKeyFromString;
 import static se.leap.bitmaskclient.providersetup.ProviderAPI.ERRORS;
+import static se.leap.bitmaskclient.providersetup.fragments.viewmodel.ProviderSelectionViewModel.INVITE_CODE_PROVIDER;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -86,7 +87,7 @@ public final class Provider implements Parcelable {
     private long lastGeoIpUpdate = 0L;
     private long lastMotdUpdate = 0L;
     private long lastMotdSeen = 0L;
-    private int type = 0;
+    private Introducer introducer = null;
     private Set<String> lastMotdSeenHashes = new HashSet<>();
     private boolean shouldUpdateVpnCertificate;
 
@@ -116,10 +117,11 @@ public final class Provider implements Parcelable {
 
     public Provider() { }
 
-    public Provider(String mainUrl, int selectedItem) {
-       this(mainUrl, null);
-        this.type = selectedItem;
+    public Provider(Introducer introducer) {
+       this(introducer.toUrl(), null);
+        this.introducer = introducer;
     }
+
     public Provider(String mainUrl) {
        this(mainUrl, null);
     }
@@ -428,6 +430,7 @@ public final class Provider implements Parcelable {
         parcel.writeLong(lastMotdSeen);
         parcel.writeStringList(new ArrayList<>(lastMotdSeenHashes));
         parcel.writeInt(shouldUpdateVpnCertificate ? 0 : 1);
+        parcel.writeParcelable(introducer, 0);
     }
 
 
@@ -489,6 +492,7 @@ public final class Provider implements Parcelable {
             in.readStringList(lastMotdSeenHashes);
             this.lastMotdSeenHashes = new HashSet<>(lastMotdSeenHashes);
             this.shouldUpdateVpnCertificate = in.readInt()  == 0;
+            this.introducer = in.readParcelable(Introducer.class.getClassLoader());
         } catch (MalformedURLException | JSONException e) {
             e.printStackTrace();
         }
@@ -745,7 +749,7 @@ public final class Provider implements Parcelable {
     }
 
     public int getType() {
-        return type;
+        return introducer != null ? INVITE_CODE_PROVIDER : -1;
     }
 
     /**
