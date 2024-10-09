@@ -101,6 +101,14 @@ public class ProviderSelectionViewModel extends ViewModel {
         return InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT;
     }
 
+    public int getEditInputLines() {
+        if (selected == INVITE_CODE_PROVIDER) {
+            return 3;
+        }
+        return 2;
+    }
+
+
     public void setCustomUrl(String url) {
         customUrl = url;
     }
