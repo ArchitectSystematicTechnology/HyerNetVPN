@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:background="@color/white"
                 tools:hint="https://example.org"
-                android:imeOptions="actionDone"it a
+                android:imeOptions="actionDone"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 android:textColorHint="@color/black800_transparent"
                 />
